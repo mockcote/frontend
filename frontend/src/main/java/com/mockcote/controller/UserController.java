@@ -10,6 +10,11 @@ public class UserController {
     public String userPage() {
         return "user"; 
     }
-
+    
+    // 회원가입 화면으로 이동
+    @GetMapping("/join")
+    public String mvJoin() {
+    	return "join";
+    }
 
 }
