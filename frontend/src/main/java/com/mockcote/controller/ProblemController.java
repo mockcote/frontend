@@ -28,6 +28,58 @@ public class ProblemController {
     
     @Value("${api.gateway.url}") // 환경 설정에서 API Gateway URL 가져오기
     private String gatewayUrl;
+    
+    @GetMapping("/problem/list")
+    public String listProblems(
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "30") int size,
+            Model model) {
+        if (search != null && !search.isEmpty()) {
+            // 문제 ID로 단일 문제 검색
+            String apiUrl = gatewayUrl + "/problems/problem/info?problemId=" + search;
+            Map<String, Object> problem = restTemplate.getForObject(apiUrl, Map.class);
+
+            if (problem != null) {
+                int difficulty = (int) problem.get("difficulty");
+                String levelName = LevelLoader.getLevelName(difficulty); // 난이도 이름 가져오기
+                problem.put("levelName", levelName); // 난이도 이름 추가
+            }
+
+            model.addAttribute("problem", problem);
+        } else {
+            // 일반 목록 조회
+            String apiUrl = gatewayUrl + "/problems/problem/list?page=" + page + "&size=" + size;
+            Map<String, Object> response = restTemplate.getForObject(apiUrl, Map.class);
+
+            List<Map<String, Object>> problems = (List<Map<String, Object>>) response.get("problems");
+            if (problems != null) {
+                // 모든 문제에 대해 난이도 이름 추가
+                for (Map<String, Object> problem : problems) {
+                    int difficulty = (int) problem.get("difficulty");
+                    String levelName = LevelLoader.getLevelName(difficulty);
+                    problem.put("levelName", levelName);
+                }
+            }
+
+            model.addAttribute("problems", problems);
+            model.addAttribute("currentPage", response.get("currentPage"));
+            model.addAttribute("totalPages", response.get("totalPages"));
+        }
+        return "problemList";
+    }
+
+
+    @GetMapping("/problem/rank")
+    public String rankProblem(@RequestParam int problemId, Model model) {
+        String apiUrl = gatewayUrl + "/stats/rank/problem/" + problemId;
+        List<Map<String, Object>> ranks = restTemplate.getForObject(apiUrl, List.class);
+
+        model.addAttribute("problemId", problemId);
+        model.addAttribute("ranks", ranks);
+
+        return "problemRank";
+    }
 
     // [GET] /problem 요청 처리 → JSP 파일 렌더링
     @GetMapping("/problem")
