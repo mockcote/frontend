@@ -1,33 +1,138 @@
 package com.mockcote.controller;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestTemplate;
 
+import com.mockcote.dto.QueryProblemRequestDto;
+import com.mockcote.dto.QueryProblemResponseDto;
+import com.mockcote.util.TagLoader;
 
 @Controller
 public class ProblemController {
-	 // [GET] /problem → 문제 뽑기 화면
+
+    private final RestTemplate restTemplate = new RestTemplate();
+    private static final String DEFAULT_HANDLE = "rlaekwjd6545";
+    private static final int DEFAULT_LEVEL = 10;
+
+    // [GET] /problem 요청 처리 → JSP 파일 렌더링
     @GetMapping("/problem")
     public String problemPage(Model model) {
-        // 초기에 표시할 내용이 있으면 model에 담는다.
+        // 태그 정보를 동적으로 로드
+        List<Map<String, Object>> tags;
+        try {
+            tags = TagLoader.loadTags(); // 태그 로드 시도
+        } catch (Exception e) {
+            tags = List.of(); // 로드 실패 시 빈 리스트로 초기화
+        }
+
+        model.addAttribute("tags", tags);
         model.addAttribute("problemMessage", "문제를 뽑아보세요!");
         return "problemPick";
     }
 
-    // [POST] /problem → 문제를 뽑은 후 결과 페이지 (또는 같은 페이지)
-    @PostMapping("/problem")
-    public String pickProblem(Model model) {
-        // 예: DB나 API를 호출해서 "문제" 정보를 가져온다.
-        // 여기서는 예시로 임의의 텍스트를 넣는다.
-        String newProblem = "문제: 1 + 1 = ?";
 
-        // model에 담아 JSP에서 표시할 수 있도록 한다.
-        model.addAttribute("problemMessage", "새로 뽑힌 문제: " + newProblem);
+    // [POST] /problem/pick 요청 처리 → 문제 뽑기 로직
+    @PostMapping("/problem/pick")
+    public String pickProblem(@RequestParam("option") String option,
+                              @RequestParam("minDifficulty") int minDifficulty,
+                              @RequestParam("maxDifficulty") int maxDifficulty,
+                              @RequestParam("minAcceptableUserCount") int minAcceptableUserCount,
+                              @RequestParam("maxAcceptableUserCount") int maxAcceptableUserCount,
+                              @RequestParam("desiredTags") String desiredTags,
+                              @RequestParam("undesiredTags") String undesiredTags,
+                              Model model,
+                              HttpSession session) {
 
-        // 똑같은 JSP 파일("problemPick.jsp")을 다시 렌더링
-        return "problemPick";
+        String problemMessage;
+        Integer problemId = null;
+
+        try {
+            if ("query".equals(option)) {
+                // 조건 기반 문제 뽑기 API 호출
+                String queryApiUrl = "http://localhost:8083/problem/query";
+
+                // 태그 입력값을 List<Integer>로 변환
+                List<Integer> desiredTagList = Arrays.stream(desiredTags.split(","))
+                        .map(String::trim)
+                        .map(Integer::parseInt)
+                        .toList();
+                List<Integer> undesiredTagList = Arrays.stream(undesiredTags.split(","))
+                        .map(String::trim)
+                        .map(Integer::parseInt)
+                        .toList();
+
+                QueryProblemRequestDto requestDto = new QueryProblemRequestDto(
+                        DEFAULT_HANDLE,  // Session에서 handle 가져오기
+                        minDifficulty,
+                        maxDifficulty,
+                        minAcceptableUserCount,
+                        maxAcceptableUserCount,
+                        desiredTagList,
+                        undesiredTagList
+                );
+
+                QueryProblemResponseDto responseDto = restTemplate.postForObject(queryApiUrl, requestDto, QueryProblemResponseDto.class);
+
+                if (responseDto != null) {
+                    problemId = responseDto.getProblemId();
+                    problemMessage = "조건 기반 문제: " + responseDto.getTitle();
+                } else {
+                    problemMessage = "조건에 맞는 문제가 없습니다.";
+                }
+
+            } else if ("random-tag".equals(option)) {
+                // 세션에서 handle과 level 가져오기
+                String handle = (String) session.getAttribute("handle");
+                Integer level = (Integer) session.getAttribute("level");
+
+                // 세션에 값이 없는 경우 기본값 사용
+                if (handle == null) {
+                    handle = DEFAULT_HANDLE;
+                }
+                if (level == null) {
+                    level = DEFAULT_LEVEL;
+                }
+
+                // 취약 태그 기반 문제 뽑기 API 호출
+                String randomTagApiUrl = "http://localhost:8083/dbsave/tag/random-problem?handle=" + handle + "&level=" + level;
+                problemId = restTemplate.getForObject(randomTagApiUrl, Integer.class);
+
+                if (problemId != null) {
+                    problemMessage = "취약 태그 기반 문제 ID: " + problemId;
+                } else {
+                    problemMessage = "취약 태그에 맞는 문제가 없습니다.";
+                }
+
+            } else {
+                problemMessage = "올바르지 않은 선택지입니다.";
+            }
+            
+            if (problemId != null) {
+                // 문제 정보 조회 API 호출
+                String problemInfoUrl = "http://localhost:8083/problem/info?problemId=" + problemId;
+                Map<String, Object> problemInfo = restTemplate.getForObject(problemInfoUrl, Map.class);
+
+                if (problemInfo != null) {
+                    model.addAttribute("problemInfo", problemInfo);
+                }
+            }
+        } catch (Exception e) {
+            problemMessage = "문제를 뽑는 중 오류가 발생했습니다: " + e.getMessage();
+        }
+
+     // 문제 ID와 메시지 전달
+        model.addAttribute("problemId", problemId);
+        model.addAttribute("problemMessage", problemMessage);
+
+        return "problemResult"; // 새로운 JSP로 이동
     }
-
 }
