@@ -10,7 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import com.mockcote.dto.QueryProblemRequestDto;
 import com.mockcote.dto.QueryProblemResponseDto;
@@ -22,13 +22,14 @@ import jakarta.servlet.http.HttpSession;
 @Controller
 public class ProblemController {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final WebClient webClient;
     private static final String DEFAULT_HANDLE = "rlaekwjd6545";
     private static final int DEFAULT_LEVEL = 10;
-    
-    @Value("${api.gateway.url}") // 환경 설정에서 API Gateway URL 가져오기
-    private String gatewayUrl;
-    
+
+    public ProblemController(WebClient.Builder webClientBuilder, @Value("${api.gateway.url}") String gatewayUrl) {
+        this.webClient = webClientBuilder.baseUrl(gatewayUrl).build();
+    }
+
     @GetMapping("/problem/list")
     public String listProblems(
             @RequestParam(required = false) String search,
@@ -37,24 +38,31 @@ public class ProblemController {
             Model model) {
         if (search != null && !search.isEmpty()) {
             // 문제 ID로 단일 문제 검색
-            String apiUrl = gatewayUrl + "/problems/problem/info?problemId=" + search;
-            Map<String, Object> problem = restTemplate.getForObject(apiUrl, Map.class);
+            String apiUrl = "/problems/problem/info?problemId=" + search;
+            Map<String, Object> problem = webClient.get()
+                    .uri(apiUrl)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
 
             if (problem != null) {
                 int difficulty = (int) problem.get("difficulty");
-                String levelName = LevelLoader.getLevelName(difficulty); // 난이도 이름 가져오기
-                problem.put("levelName", levelName); // 난이도 이름 추가
+                String levelName = LevelLoader.getLevelName(difficulty);
+                problem.put("levelName", levelName);
             }
 
             model.addAttribute("problem", problem);
         } else {
             // 일반 목록 조회
-            String apiUrl = gatewayUrl + "/problems/problem/list?page=" + page + "&size=" + size;
-            Map<String, Object> response = restTemplate.getForObject(apiUrl, Map.class);
+            String apiUrl = "/problems/problem/list?page=" + page + "&size=" + size;
+            Map<String, Object> response = webClient.get()
+                    .uri(apiUrl)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
 
             List<Map<String, Object>> problems = (List<Map<String, Object>>) response.get("problems");
             if (problems != null) {
-                // 모든 문제에 대해 난이도 이름 추가
                 for (Map<String, Object> problem : problems) {
                     int difficulty = (int) problem.get("difficulty");
                     String levelName = LevelLoader.getLevelName(difficulty);
@@ -69,11 +77,14 @@ public class ProblemController {
         return "problemList";
     }
 
-
     @GetMapping("/problem/rank")
     public String rankProblem(@RequestParam int problemId, Model model) {
-        String apiUrl = gatewayUrl + "/stats/rank/problem/" + problemId;
-        List<Map<String, Object>> ranks = restTemplate.getForObject(apiUrl, List.class);
+        String apiUrl = "/stats/rank/problem/" + problemId;
+        List<Map<String, Object>> ranks = webClient.get()
+                .uri(apiUrl)
+                .retrieve()
+                .bodyToMono(List.class)
+                .block();
 
         model.addAttribute("problemId", problemId);
         model.addAttribute("ranks", ranks);
@@ -81,15 +92,13 @@ public class ProblemController {
         return "problemRank";
     }
 
-    // [GET] /problem 요청 처리 → JSP 파일 렌더링
     @GetMapping("/problem")
     public String problemPage(Model model) {
-        // 태그 정보를 동적으로 로드
         List<Map<String, Object>> tags;
         try {
-            tags = TagLoader.loadTags(); // 태그 로드 시도
+            tags = TagLoader.loadTags();
         } catch (Exception e) {
-            tags = List.of(); // 로드 실패 시 빈 리스트로 초기화
+            tags = List.of();
         }
 
         model.addAttribute("tags", tags);
@@ -97,8 +106,6 @@ public class ProblemController {
         return "problemPick";
     }
 
-
-    // [POST] /problem/pick 요청 처리 → 문제 뽑기 로직
     @PostMapping("/problem/pick")
     public String pickProblem(@RequestParam("option") String option,
                               @RequestParam(value = "minDifficulty", required = false, defaultValue = "1") int minDifficulty,
@@ -115,10 +122,8 @@ public class ProblemController {
 
         try {
             if ("query".equals(option)) {
-                // 조건 기반 문제 뽑기 API 호출
-            	String queryApiUrl = gatewayUrl + "/problems/problem/query"; // 게이트웨이 URL 사용
+                String queryApiUrl = "/problems/problem/query";
 
-            	// 태그 입력값을 List<Integer>로 변환, null일 경우 빈 리스트 처리
                 List<Integer> desiredTagList = (desiredTags != null && !desiredTags.isBlank())
                         ? Arrays.stream(desiredTags.split(","))
                             .map(String::trim)
@@ -134,7 +139,7 @@ public class ProblemController {
                         : List.of();
 
                 QueryProblemRequestDto requestDto = new QueryProblemRequestDto(
-                        DEFAULT_HANDLE,  // Session에서 handle 가져오기
+                        DEFAULT_HANDLE,
                         minDifficulty,
                         maxDifficulty,
                         minAcceptableUserCount,
@@ -143,7 +148,12 @@ public class ProblemController {
                         undesiredTagList
                 );
 
-                QueryProblemResponseDto responseDto = restTemplate.postForObject(queryApiUrl, requestDto, QueryProblemResponseDto.class);
+                QueryProblemResponseDto responseDto = webClient.post()
+                        .uri(queryApiUrl)
+                        .bodyValue(requestDto)
+                        .retrieve()
+                        .bodyToMono(QueryProblemResponseDto.class)
+                        .block();
 
                 if (responseDto != null) {
                     problemId = responseDto.getProblemId();
@@ -153,41 +163,38 @@ public class ProblemController {
                 }
 
             } else if ("random-tag".equals(option)) {
-                // 세션에서 handle과 level 가져오기
                 String handle = (String) session.getAttribute("handle");
                 Integer level = (Integer) session.getAttribute("level");
 
-                // 세션에 값이 없는 경우 기본값 사용
-                if (handle == null) {
-                    handle = DEFAULT_HANDLE;
-                }
-                if (level == null) {
-                    level = DEFAULT_LEVEL;
-                }
+                if (handle == null) handle = DEFAULT_HANDLE;
+                if (level == null) level = DEFAULT_LEVEL;
 
-                // 취약 태그 기반 문제 뽑기 API 호출
-                String randomTagApiUrl = gatewayUrl + "/problems/dbsave/tag/random-problem?handle=" + handle + "&level=" + level;
-                problemId = restTemplate.getForObject(randomTagApiUrl, Integer.class);
+                String randomTagApiUrl = "/problems/dbsave/tag/random-problem?handle=" + handle + "&level=" + level;
+                problemId = webClient.get()
+                        .uri(randomTagApiUrl)
+                        .retrieve()
+                        .bodyToMono(Integer.class)
+                        .block();
 
-                if (problemId != null) {
-                    problemMessage = "취약 태그 기반 문제 ID: " + problemId;
-                } else {
-                    problemMessage = "취약 태그에 맞는 문제가 없습니다.";
-                }
-
+                problemMessage = (problemId != null)
+                        ? "취약 태그 기반 문제 ID: " + problemId
+                        : "취약 태그에 맞는 문제가 없습니다.";
             } else {
                 problemMessage = "올바르지 않은 선택지입니다.";
             }
 
             if (problemId != null) {
-                // 문제 정보 조회 API 호출
-            	String problemInfoUrl = gatewayUrl + "/problems/problem/info?problemId=" + problemId;
-                Map<String, Object> problemInfo = restTemplate.getForObject(problemInfoUrl, Map.class);
+                String problemInfoUrl = "/problems/problem/info?problemId=" + problemId;
+                Map<String, Object> problemInfo = webClient.get()
+                        .uri(problemInfoUrl)
+                        .retrieve()
+                        .bodyToMono(Map.class)
+                        .block();
 
                 if (problemInfo != null) {
                     int difficulty = (int) problemInfo.get("difficulty");
                     String levelName = LevelLoader.getLevelName(difficulty);
-                    problemInfo.put("levelName", levelName); // 난이도 이름 추가
+                    problemInfo.put("levelName", levelName);
                     model.addAttribute("problemInfo", problemInfo);
                 }
             }
@@ -195,10 +202,9 @@ public class ProblemController {
             problemMessage = "문제를 뽑는 중 오류가 발생했습니다: " + e.getMessage();
         }
 
-     // 문제 ID와 메시지 전달
         model.addAttribute("problemId", problemId);
         model.addAttribute("problemMessage", problemMessage);
 
-        return "problemResult"; // 새로운 JSP로 이동
+        return "problemResult";
     }
 }
