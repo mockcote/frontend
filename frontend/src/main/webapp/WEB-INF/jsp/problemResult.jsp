@@ -88,6 +88,15 @@
             background-color: #5a6268;
         }
 
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
         .center {
             text-align: center;
         }
@@ -127,8 +136,8 @@
                 ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("title") 
                 : "N/A" %></p>
             <p><strong>난이도:</strong> <%= request.getAttribute("problemInfo") != null 
-                ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("difficulty") 
-                : "N/A" %></p>
+    			? ((Map<String, Object>) request.getAttribute("problemInfo")).get("levelName") 
+    			: "N/A" %></p>
             <p><strong>제출한 사용자 수:</strong> <%= request.getAttribute("problemInfo") != null 
                 ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("acceptableUserCount") 
                 : "N/A" %></p>
@@ -149,11 +158,14 @@
             </ul>
         </div>
 
-        <!-- 문제 풀이 페이지로 이동 버튼 -->
+        <!-- 문제 풀이 및 다시 뽑기 버튼 -->
         <div class="center">
-            <form action="/problem/solve" method="get">
+            <form action="/problem/solve" method="get" style="display: inline;">
                 <input type="hidden" name="problemId" value="<%= request.getAttribute("problemId") %>">
                 <button type="submit" class="btn btn-primary">문제 풀기</button>
+            </form>
+            <form action="/problem" method="get" style="display: inline;">
+                <button type="submit" class="btn btn-warning">다시 뽑기</button>
             </form>
         </div>
     </div>
