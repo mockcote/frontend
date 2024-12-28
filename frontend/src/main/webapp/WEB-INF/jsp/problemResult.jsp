@@ -120,6 +120,12 @@
                 toggleButton.textContent = "태그 보기";
             }
         }
+
+        function setLimitTime() {
+            const limitTimeInput = document.getElementById("limitTime");
+            const hiddenLimitTime = document.getElementById("hiddenLimitTime");
+            hiddenLimitTime.value = limitTimeInput.value;
+        }
     </script>
 </head>
 <body>
@@ -160,9 +166,13 @@
 
         <!-- 문제 풀이 및 다시 뽑기 버튼 -->
         <div class="center">
+            <!-- 제한시간 설정 -->
+            <label for="limitTime"><strong>제한시간(분):</strong></label>
+            <input type="number" id="limitTime" name="limitTime" min="1" value="30" required style="width: 60px; text-align: center; margin-left: 5px;">
             <form action="/problem/solve" method="get" style="display: inline;">
                 <input type="hidden" name="problemId" value="<%= request.getAttribute("problemId") %>">
-                <button type="submit" class="btn btn-primary">문제 풀기</button>
+                <input type="hidden" id="hiddenLimitTime" name="limitTime">
+                <button type="submit" class="btn btn-primary" onclick="setLimitTime()">문제 풀기</button>
             </form>
             <form action="/problem" method="get" style="display: inline;">
                 <button type="submit" class="btn btn-warning">다시 뽑기</button>

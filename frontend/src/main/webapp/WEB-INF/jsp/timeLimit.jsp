@@ -141,7 +141,6 @@ button:hover {
         timeLeftElement.textContent = minutes + "분 " + (seconds < 10 ? "0" : "") + seconds + "초";
     }
 
-    
     // 풀이 여부 체크 
     function checkSubmission() {
         const url = BASE_URL + "/submissions/result?handle=" + dummyData.handle + "&problemId=" + dummyData.problemId;
