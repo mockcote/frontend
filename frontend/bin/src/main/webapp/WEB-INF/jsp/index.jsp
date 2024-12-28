@@ -8,7 +8,6 @@
     <h1>JSP Frontend Page</h1>
     <p>Message: ${message}</p>
 
-	<a href="/join">회원가입</a>
     <!-- Ajax 요청으로 Gateway를 거쳐 백엔드 서버를 호출하는 예시 -->
     <script>
         fetch('/gateway-api/hello')
