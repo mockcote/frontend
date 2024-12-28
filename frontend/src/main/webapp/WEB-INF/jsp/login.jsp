@@ -94,7 +94,7 @@ input {
 			</div>
 		</form>
 		<div class="form-group">
-			<a href="/joim" class="register-button">Sign Up</a>
+			<a href="/join" class="register-button">Sign Up</a>
 		</div>
 	</div>
 
@@ -121,8 +121,6 @@ input {
             })
             .then(data => {
                 // 로컬 스토리지에 값 저장
-                localStorage.setItem('level', data.level);
-                localStorage.setItem('handle', data.handle);
                 localStorage.setItem('accessToken', data.accessToken);
                 alert('Login successful');
                 console.log('Stored data:', data);
