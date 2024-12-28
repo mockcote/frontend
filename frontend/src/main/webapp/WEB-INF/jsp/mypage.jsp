@@ -54,7 +54,7 @@
 
                 levelStats.forEach(stat => {
                     const row = document.createElement('tr');
-                    row.innerHTML = '<td>' + stat.level + '</td><td>' + stat.solved + '</td>';
+                    row.innerHTML = '<td>' + stat.levelName + '</td><td>' + stat.solved + '</td>';
                     tableBody.appendChild(row);
                 });
             } catch (error) {
