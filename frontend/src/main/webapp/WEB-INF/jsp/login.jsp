@@ -109,7 +109,8 @@ input {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ userId, password })
+                body: JSON.stringify({ userId, password }),
+                credentials: 'include' // 쿠키 포함
             })
             .then(response => {
                 if (response.ok) {
