@@ -169,7 +169,7 @@
             <!-- 제한시간 설정 -->
             <label for="limitTime"><strong>제한시간(분):</strong></label>
             <input type="number" id="limitTime" name="limitTime" min="1" value="30" required style="width: 60px; text-align: center; margin-left: 5px;">
-            <form action="/problem/solve" method="get" style="display: inline;">
+            <form action="/time" method="get" style="display: inline;">
                 <input type="hidden" name="problemId" value="<%= request.getAttribute("problemId") %>">
                 <input type="hidden" id="hiddenLimitTime" name="limitTime">
                 <button type="submit" class="btn btn-primary" onclick="setLimitTime()">문제 풀기</button>

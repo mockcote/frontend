@@ -22,7 +22,7 @@ public class UserController {
     public String loginPage() {
         return "login";
     }
-    
+  
     @GetMapping("/mypage")
     public String myPage(Model model) {
         // 임시로 handle 하드코딩
