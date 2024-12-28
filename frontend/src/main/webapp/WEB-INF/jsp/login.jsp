@@ -113,13 +113,19 @@ input {
             })
             .then(response => {
                 if (response.ok) {
-                    alert('Login successful');
                     return response.json();
                 } else {
                     throw new Error('Login failed');
                 }
             })
-            .then(data => console.log(data))
+            .then(data => {
+                // 로컬 스토리지에 값 저장
+                localStorage.setItem('level', data.level);
+                localStorage.setItem('handle', data.handle);
+                localStorage.setItem('accessToken', data.accessToken);
+                alert('Login successful');
+                console.log('Stored data:', data);
+            })
             .catch(error => alert(error.message));
         }
     </script>
