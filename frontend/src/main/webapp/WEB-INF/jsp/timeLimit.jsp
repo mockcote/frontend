@@ -100,18 +100,10 @@ button:hover {
 	text-align: center;
 }
 </style>
+	<script src="/js/authFetch.js"></script>
 <script>
     const BASE_URL = "${gatewayUrl}"; // API 요청 기본 URL
-	const handle = localStorage.getItem("handle");
-
-    // 서버에서 전달받을 것;
-/*	const problemId = "${problemId}"; */
-/*	const limitTime = "${limitTime}";*/
-
-    const dummyData = {
-        problemId: 1001,
-        limitTime: 30 // 제한 시간 (분 단위) 임의 더비값
-    };
+	const handle = "${cookie.handle.value}";
 
     let startTime; // 시작 시간 : 페이지 onload될 때 셋 되게 했
     let timerInterval; // 타이머 ID
@@ -127,7 +119,7 @@ button:hover {
 
         const currentTime = new Date();
         const elapsedSeconds = Math.floor((currentTime - startTime) / 1000);
-        const remainingSeconds = dummyData.limitTime * 60 - elapsedSeconds;
+        const remainingSeconds = ${limitTime} * 60 - elapsedSeconds;
 
         if (remainingSeconds <= 0) {
             timeLeftElement.textContent = "실패!";
@@ -145,9 +137,9 @@ button:hover {
 
     // 풀이 여부 체크 
     function checkSubmission() {
-        const url = BASE_URL + "/submissions/result?handle=" + handle + "&problemId=" + dummyData.problemId;
+        const url = BASE_URL + "/submissions/result?handle=" + handle + "&problemId=" + ${problemId};
 
-        fetch(url)
+        authFetch(url)
             .then(response => response.text())
             .then(data => {
                 console.log("응답 데이터:", data);
@@ -180,16 +172,16 @@ button:hover {
         // 언어 설정이 없는 거 같은데 우리 요청에 있길래 일단 select로 받두게 해서 추가함
         const requestBody = {
             handle: handle,
-            problemId: dummyData.problemId,
+            problemId: ${problemId},
             startTime: formattedStartTime,
-            limitTime: dummyData.limitTime,
+            limitTime: ${limitTime},
             language: language,
             status: status
         };
 
         console.log("요청 데이터:", requestBody);
 
-        fetch(url, {
+        authFetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(requestBody)
@@ -197,7 +189,7 @@ button:hover {
             .then(response => {
                 if (response.status === 201) {
                     alert("풀이 결과가 저장되었습니다.");
-                    window.location.href = "/problem/rank?problemId=" + dummyData.problemId;
+                    window.location.href = "/problem/rank?problemId=" + ${problemId};
                 } else {
                     console.error("응답 상태 코드:", response.status);
                     alert("결과 저장에 실패했습니다. 상태 코드: " + response.status);
@@ -210,7 +202,7 @@ button:hover {
     function incrementScore() {
         const incrementScoreUrl = BASE_URL + "/stats/rank/increment-score?handle=" + handle;
 
-        fetch(incrementScoreUrl, {method: "POST"})
+        authFetch(incrementScoreUrl, {method: "POST"})
             .then(response => {
                 if (response.ok) {
                     alert("점수가 성공적으로 업데이트되었습니다!");
@@ -228,10 +220,10 @@ button:hover {
 
         console.log("시작 시간:", formattedStartTime);
 
-        document.getElementById("problemLink").innerText = dummyData.problemId;
-        document.getElementById("problemLink").href = "https://www.acmicpc.net/problem/" + dummyData.problemId;
+        document.getElementById("problemLink").innerText = ${problemId};
+        document.getElementById("problemLink").href = "https://www.acmicpc.net/problem/" + ${problemId};
         document.getElementById("startTime").innerText = formattedStartTime;
-        document.getElementById("limitTime").innerText = dummyData.limitTime + "분";
+        document.getElementById("limitTime").innerText = ${limitTime} + "분";
 
         updateTimer();
         timerInterval = setInterval(updateTimer, 1000);
