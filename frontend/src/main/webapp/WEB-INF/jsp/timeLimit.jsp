@@ -102,7 +102,7 @@ button:hover {
 </style>
 <script>
     const BASE_URL = "${gatewayUrl}"; // API 요청 기본 URL
-	const userInfo = localStorage.getItem("userInfo");
+	const handle = localStorage.getItem("handle");
 
     // 서버에서 전달받을 것;
 /*	const problemId = "${problemId}"; */
@@ -110,8 +110,7 @@ button:hover {
 
     const dummyData = {
         problemId: 1001,
-        handle: "khy0145",
-        limitTime: 30 // 제한 시간 (분 단위) 임의 더비값 
+        limitTime: 30 // 제한 시간 (분 단위) 임의 더비값
     };
 
     let startTime; // 시작 시간 : 페이지 onload될 때 셋 되게 했
@@ -146,7 +145,7 @@ button:hover {
 
     // 풀이 여부 체크 
     function checkSubmission() {
-        const url = BASE_URL + "/submissions/result?handle=" + dummyData.handle + "&problemId=" + dummyData.problemId;
+        const url = BASE_URL + "/submissions/result?handle=" + handle + "&problemId=" + dummyData.problemId;
 
         fetch(url)
             .then(response => response.text())
@@ -157,7 +156,7 @@ button:hover {
 
                 if (status === "SUCCESS") {
                     saveSubmission(status);
-                    incrementScore(dummyData.handle); // 점수 증가 호출
+                    incrementScore(); // 점수 증가 호출
                 } else {
                     alert("풀이 실패! 코드를 다시 작성해 보세요.");
                 }
@@ -180,7 +179,7 @@ button:hover {
 
         // 언어 설정이 없는 거 같은데 우리 요청에 있길래 일단 select로 받두게 해서 추가함
         const requestBody = {
-            handle: dummyData.handle,	// handle dummy 말고 쿠키로 수정 필요
+            handle: handle,
             problemId: dummyData.problemId,
             startTime: formattedStartTime,
             limitTime: dummyData.limitTime,
@@ -208,7 +207,7 @@ button:hover {
     }
 
 	// 사용자 점수 +1
-    function incrementScore(handle) {
+    function incrementScore() {
         const incrementScoreUrl = BASE_URL + "/stats/rank/increment-score?handle=" + handle;
 
         fetch(incrementScoreUrl, {method: "POST"})

@@ -7,12 +7,12 @@
     <title>마이페이지</title>
     <script>
         const BASE_URL = "${gatewayUrl}";
-        const userInfo = localStorage.getItem("userInfo");
+        const handle = localStorage.getItem("handle");
 
         // 유저 통계 가져오기
         async function fetchUserStats() {
             try {
-                const userStats = await fetch(BASE_URL+"/stats/user?handle=${handle}").then((res) => res.json());
+                const userStats = await fetch(BASE_URL+"/stats/user?handle="+handle).then((res) => res.json());
                 const tableBody = document.getElementById('user-stats-body');
                 tableBody.innerHTML = ''; // 기존 내용 초기화
 
@@ -31,7 +31,7 @@
         // 태그별 문제 수 가져오기
         async function fetchTagStats() {
             try {
-                const tagStats = await fetch(BASE_URL+"/stats/tags?handle=${handle}").then((res) => res.json());
+                const tagStats = await fetch(BASE_URL+"/stats/tags?handle="+handle).then((res) => res.json());
                 const tableBody = document.getElementById('tag-stats-body');
                 tableBody.innerHTML = ''; // 기존 내용 초기화
 
@@ -48,7 +48,7 @@
         // 레벨별 문제 수 가져오기
         async function fetchLevelStats() {
             try {
-                const levelStats = await fetch(BASE_URL+"/stats/levels?handle=${handle}").then((res) => res.json());
+                const levelStats = await fetch(BASE_URL+"/stats/levels?handle="+handle).then((res) => res.json());
                 const tableBody = document.getElementById('level-stats-body');
                 tableBody.innerHTML = ''; // 기존 내용 초기화
 
