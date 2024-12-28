@@ -6,6 +6,9 @@
 <meta charset="UTF-8">
 <title>회원가입</title>
 <script>
+	const BASE_URL = "${gatewayUrl}";
+	console.log(BASE_URL);
+
     document.addEventListener("DOMContentLoaded", () => {
         const handleAuthButton = document.getElementById("handleAuthButton");
         const handleInput = document.getElementById("handle");
@@ -42,7 +45,7 @@
                     loadingOverlay.style.display = "block";
 
                     try {
-                        const response = await fetch("http://localhost:8080/auth/handle-auth", {
+                        const response = await fetch(BASE_URL + "/auth/handle-auth", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json"
@@ -94,7 +97,7 @@
             }
 
             try {
-                const response = await fetch("http://localhost:8080/user/join", {
+                const response = await fetch(BASE_URL + "/user/join", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
