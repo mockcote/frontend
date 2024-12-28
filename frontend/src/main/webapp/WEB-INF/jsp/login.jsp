@@ -109,7 +109,8 @@ input {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ userId, password })
+                body: JSON.stringify({ userId, password }),
+                credentials: 'include' // 쿠키 포함
             })
             .then(response => {
                 if (response.ok) {
@@ -120,8 +121,6 @@ input {
             })
             .then(data => {
                 // 로컬 스토리지에 값 저장
-                localStorage.setItem('level', data.level);
-                localStorage.setItem('handle', data.handle);
                 localStorage.setItem('accessToken', data.accessToken);
                 alert('Login successful');
                 console.log('Stored data:', data);
