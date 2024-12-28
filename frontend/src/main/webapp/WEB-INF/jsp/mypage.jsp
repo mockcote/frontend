@@ -7,7 +7,7 @@
     <title>마이페이지</title>
     <script>
         const BASE_URL = "${gatewayUrl}";
-        console.log(BASE_URL);
+        const userInfo = localStorage.getItem("userInfo");
 
         // 유저 통계 가져오기
         async function fetchUserStats() {

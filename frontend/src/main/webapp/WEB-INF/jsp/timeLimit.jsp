@@ -102,9 +102,12 @@ button:hover {
 </style>
 <script>
     const BASE_URL = "${gatewayUrl}"; // API 요청 기본 URL
+	const userInfo = localStorage.getItem("userInfo");
 
-    // problemId를 서버에서 전달받음 const problemId = "${param.problemId}";
-/*     const problemId = "${param.problemId}"; */
+    // 서버에서 전달받을 것;
+/*	const problemId = "${problemId}"; */
+/*	const limitTime = "${limitTime}";*/
+
     const dummyData = {
         problemId: 1001,
         handle: "khy0145",
@@ -254,7 +257,7 @@ button:hover {
 		</select>
 		<button class="btn btn-primary" onclick="checkSubmission()">풀이 완료</button>
 		<button class="btn btn-secondary" onclick="history.back()">돌아가기</button>
-		<button class="btn btn-warning" onclick="window.location.href='/index.jsp'">홈</button>
+		<button class="btn btn-warning" onclick="window.location.href='/'">홈</button>
 	</div>
 </body>
 </html>

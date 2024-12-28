@@ -94,7 +94,7 @@ input {
 			</div>
 		</form>
 		<div class="form-group">
-			<a href="/joim" class="register-button">Sign Up</a>
+			<a href="/join" class="register-button">Sign Up</a>
 		</div>
 	</div>
 
