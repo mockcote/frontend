@@ -101,7 +101,7 @@ button:hover {
 }
 </style>
 <script>
-    const BASE_URL = "http://localhost:8084"; // API 요청 기본 URL
+    const BASE_URL = "${gatewayUrl}"; // API 요청 기본 URL
 
     // problemId를 서버에서 전달받음 const problemId = "${param.problemId}";
 /*     const problemId = "${param.problemId}"; */
@@ -163,7 +163,6 @@ button:hover {
             .catch(err => console.error("API 호출 중 오류 발생:", err));
     }
 
-    
     // 풀이 로그 저장 함수 
     function saveSubmission(status) {
         const language = document.getElementById("language").value;
@@ -197,7 +196,7 @@ button:hover {
             .then(response => {
                 if (response.status === 201) {
                     alert("풀이 결과가 저장되었습니다.");
-                    window.location.href = "http://localhost:3000/problem/rank?problemId=" + dummyData.problemId;
+                    window.location.href = "/problem/rank?problemId=" + dummyData.problemId;
                 } else {
                     console.error("응답 상태 코드:", response.status);
                     alert("결과 저장에 실패했습니다. 상태 코드: " + response.status);
@@ -206,13 +205,11 @@ button:hover {
             .catch(err => console.error("API 호출 중 오류 발생:", err));
     }
 
+	// 사용자 점수 +1
     function incrementScore(handle) {
-        const statsBaseUrl = "http://localhost:8082";
-        const incrementScoreUrl = statsBaseUrl + "/stats/rank/increment-score?handle=" + handle;
+        const incrementScoreUrl = BASE_URL + "/stats/rank/increment-score?handle=" + handle;
 
-        fetch(incrementScoreUrl, {
-            method: "POST"
-        })
+        fetch(incrementScoreUrl, {method: "POST"})
             .then(response => {
                 if (response.ok) {
                     alert("점수가 성공적으로 업데이트되었습니다!");
