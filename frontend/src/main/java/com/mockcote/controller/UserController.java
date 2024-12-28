@@ -18,11 +18,17 @@ public class UserController {
     	return "join";
     }
 
+<<<<<<< HEAD
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login"; 
+=======
     @GetMapping("/mypage")
     public String myPage(Model model) {
         // 임시로 handle 하드코딩
         model.addAttribute("handle", "3957ki");
         return "mypage";
+>>>>>>> main
     }
 
 }
