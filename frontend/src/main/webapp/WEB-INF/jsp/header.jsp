@@ -2,6 +2,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <div id="navbar" style="background-color: #007bff; padding: 10px; text-align: center; color: white;">
     <a href="/" style="margin-right: 15px; color: white; text-decoration: none;">홈</a>
+    <a href="/rank/total" style="margin-right: 15px; color: white; text-decoration: none;">전체 사용자 랭킹</a>
     <span id="guestButtons">
         <a href="/join" style="margin-right: 15px; color: white; text-decoration: none;">회원가입</a>
         <a href="/login" style="margin-right: 15px; color: white; text-decoration: none;">로그인</a>
@@ -13,7 +14,6 @@
 </div>
 <hr>
 <script>
-	const BASE_URL = "${gatewayUrl}";    
     document.addEventListener("DOMContentLoaded", () => {
         const accessToken = localStorage.getItem('accessToken');
         const guestButtons = document.getElementById('guestButtons');
@@ -32,7 +32,7 @@
         // 로그아웃 버튼 클릭 이벤트
         logoutButton.addEventListener('click', async () => {
             try {
-                const response = await fetch(BASE_URL+'/auth/logout', {
+                const response = await fetch('/auth/logout', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
