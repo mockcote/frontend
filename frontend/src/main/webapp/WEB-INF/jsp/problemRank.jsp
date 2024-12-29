@@ -4,6 +4,7 @@
 <head>
     <title>문제 랭킹</title>
     <style>
+        /* 기존 스타일 유지 또는 추가 */
         body {
             font-family: Arial, sans-serif;
             background-color: #f9f9f9;
@@ -50,6 +51,55 @@
             background-color: #0056b3;
         }
     </style>
+    <script>
+        // handle과 problemId를 JavaScript 변수로 설정
+        const handle = "${cookie.handle.value}";
+        const problemId = <%= request.getAttribute("problemId") %>;
+        const BASE_URL = "${gatewayUrl}";
+
+        async function checkAndProceedRanking(event) {
+            event.preventDefault(); // 폼의 기본 제출 동작을 막음
+
+            try {
+            	console.log("handle: ",handle);
+            	console.log("problemId: ", problemId);
+            	
+                const response = await fetch(BASE_URL+"/problems/problem/has-solved", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ handle, problemId })
+                });
+                
+                
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Response data:", data);
+                    if (data.hasSolved) {
+                        alert("이미 백준에서 문제를 풀었습니다. 따라서 이 웹사이트에서는 풀 수 없습니다.");
+                    } else {
+                        // 제한시간 설정 및 리다이렉트
+                        const limitTime = prompt("제한시간(분)을 입력해주세요:", "30");
+                        if (limitTime && !isNaN(limitTime) && parseInt(limitTime) > 0) {
+                            // 리다이렉트
+                            window.location.href = '/time?problemId='+problemId+'&limitTime='+limitTime;
+                        } else {
+                            alert("올바른 제한시간을 입력해주세요.");
+                        }
+                    }
+                } else {
+                    const errorText = await response.text();
+                    console.error("API error response:", errorText);
+                    alert(`문제 해결 여부를 확인하는 데 실패했습니다. 상태 코드: ${response.status}, 메시지: ${errorText}`);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("서버 오류가 발생했습니다.");
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -81,7 +131,8 @@
                 <% } %>
             </tbody>
         </table>
-        <a href="/problem/list" class="btn">문제 목록으로 돌아가기</a>
+        <button class="btn" onclick="checkAndProceedRanking(event)">문제 풀기</button>
+        <a href="/problem/list" class="btn" style="background-color: #6c757d; margin-left: 10px;">문제 목록으로 돌아가기</a>
     </div>
 </body>
 </html>
