@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,7 +24,6 @@ import jakarta.servlet.http.HttpSession;
 public class ProblemController {
 
     private final WebClient webClient;
-    private static final String DEFAULT_HANDLE = "rlaekwjd6545";
     private static final int DEFAULT_LEVEL = 10;
 
     public ProblemController(WebClient.Builder webClientBuilder, @Value("${api.gateway.url}") String gatewayUrl) {
@@ -107,15 +107,17 @@ public class ProblemController {
     }
 
     @PostMapping("/problem/pick")
-    public String pickProblem(@RequestParam("option") String option,
-                              @RequestParam(value = "minDifficulty", required = false, defaultValue = "1") int minDifficulty,
-                              @RequestParam(value = "maxDifficulty", required = false, defaultValue = "20") int maxDifficulty,
-                              @RequestParam(value = "minAcceptableUserCount", required = false, defaultValue = "0") int minAcceptableUserCount,
-                              @RequestParam(value = "maxAcceptableUserCount", required = false, defaultValue = "10000000") int maxAcceptableUserCount,
-                              @RequestParam(value = "desiredTags", required = false) String desiredTags,
-                              @RequestParam(value = "undesiredTags", required = false) String undesiredTags,
-                              Model model,
-                              HttpSession session) {
+    public String pickProblem(
+            @RequestParam("option") String option,
+            @RequestParam(value = "minDifficulty", required = false, defaultValue = "1") int minDifficulty,
+            @RequestParam(value = "maxDifficulty", required = false, defaultValue = "20") int maxDifficulty,
+            @RequestParam(value = "minAcceptableUserCount", required = false, defaultValue = "0") int minAcceptableUserCount,
+            @RequestParam(value = "maxAcceptableUserCount", required = false, defaultValue = "10000000") int maxAcceptableUserCount,
+            @RequestParam(value = "desiredTags", required = false) String desiredTags,
+            @RequestParam(value = "undesiredTags", required = false) String undesiredTags,
+            Model model,
+            @CookieValue(value = "handle", required = false) String handle, // 쿠키에서 handle 가져오기
+            HttpSession session) {
 
         String problemMessage;
         Integer problemId = null;
@@ -139,7 +141,7 @@ public class ProblemController {
                         : List.of();
 
                 QueryProblemRequestDto requestDto = new QueryProblemRequestDto(
-                        DEFAULT_HANDLE,
+                        handle != null ? handle : "", // 쿠키에서 가져온 handle 사용
                         minDifficulty,
                         maxDifficulty,
                         minAcceptableUserCount,
@@ -163,10 +165,9 @@ public class ProblemController {
                 }
 
             } else if ("random-tag".equals(option)) {
-                String handle = (String) session.getAttribute("handle");
-                Integer level = (Integer) session.getAttribute("level");
-
-                if (handle == null) handle = DEFAULT_HANDLE;
+                // handle을 세션 대신 쿠키에서 가져온 값 사용
+                if (handle == null) handle = "";
+                Integer level = (Integer) session.getAttribute("level"); // level은 여전히 세션에서 가져옴
                 if (level == null) level = DEFAULT_LEVEL;
 
                 String randomTagApiUrl = "/problems/dbsave/tag/random-problem?handle=" + handle + "&level=" + level;

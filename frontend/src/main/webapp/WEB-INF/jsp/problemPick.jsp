@@ -5,6 +5,7 @@
 <head>
     <title>문제 뽑기</title>
     <style>
+        /* 기존 스타일 유지 또는 개선 */
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -124,24 +125,9 @@
             }
         }
 
+        // setDefaultValues 함수는 기본 값이 HTML에서 설정되므로 필요 없을 수 있습니다.
         function setDefaultValues() {
-            const minDifficulty = document.getElementById("minDifficulty");
-            const maxDifficulty = document.getElementById("maxDifficulty");
-            const minAcceptableUserCount = document.getElementById("minAcceptableUserCount");
-            const maxAcceptableUserCount = document.getElementById("maxAcceptableUserCount");
-
-            if (!minDifficulty.value) {
-                minDifficulty.value = 1;
-            }
-            if (!maxDifficulty.value) {
-                maxDifficulty.value = 30;
-            }
-            if (!minAcceptableUserCount.value) {
-                minAcceptableUserCount.value = 0;
-            }
-            if (!maxAcceptableUserCount.value) {
-                maxAcceptableUserCount.value = 10000000;
-            }
+            // 필요 시 추가 로직
         }
     </script>
 </head>
@@ -152,7 +138,13 @@
     <div class="container">
         <p style="color: #555;">${problemMessage}</p>
 
-        <form action="/problem/pick" method="post" onsubmit="setDefaultValues()">
+        <c:if test="${not empty cookie.handle}">
+            <p>현재 사용자: ${cookie.handle.value}</p>
+        </c:if>
+
+        <form action="/problem/pick" method="post">
+            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
+
             <label>
                 <input type="radio" name="option" value="random-tag" checked onclick="toggleConditionFields('random-tag')"> 취약 태그 기반 문제 뽑기
             </label>
@@ -164,10 +156,10 @@
                 <fieldset>
                     <legend>조건 설정</legend>
                     <label for="minDifficulty">최소 난이도:</label>
-                    <input type="number" id="minDifficulty" name="minDifficulty" min="1" max="30">
+                    <input type="number" id="minDifficulty" name="minDifficulty" min="1" max="30" value="1">
 
                     <label for="maxDifficulty">최대 난이도:</label>
-                    <input type="number" id="maxDifficulty" name="maxDifficulty" min="1" max="30">
+                    <input type="number" id="maxDifficulty" name="maxDifficulty" min="1" max="30" value="30">
 
                     <span id="toggleDifficultyButton" class="toggle-button" onclick="toggleDifficultyTable()">난이도표 보기</span>
                     <table id="difficultyTable" class="difficulty-table" style="display: none;">
@@ -179,44 +171,44 @@
                         </thead>
                         <tbody>
                             <tr><td>0</td><td>Unrated / Not Ratable</td></tr>
-					          <tr><td>1</td><td>Bronze V</td></tr>
-					          <tr><td>2</td><td>Bronze IV</td></tr>
-					          <tr><td>3</td><td>Bronze III</td></tr>
-					          <tr><td>4</td><td>Bronze II</td></tr>
-					          <tr><td>5</td><td>Bronze I</td></tr>
-					          <tr><td>6</td><td>Silver V</td></tr>
-					          <tr><td>7</td><td>Silver IV</td></tr>
-					          <tr><td>8</td><td>Silver III</td></tr>
-					          <tr><td>9</td><td>Silver II</td></tr>
-					          <tr><td>10</td><td>Silver I</td></tr>
-					          <tr><td>11</td><td>Gold V</td></tr>
-					          <tr><td>12</td><td>Gold IV</td></tr>
-					          <tr><td>13</td><td>Gold III</td></tr>
-					          <tr><td>14</td><td>Gold II</td></tr>
-					          <tr><td>15</td><td>Gold I</td></tr>
-					          <tr><td>16</td><td>Platinum V</td></tr>
-					          <tr><td>17</td><td>Platinum IV</td></tr>
-					          <tr><td>18</td><td>Platinum III</td></tr>
-					          <tr><td>19</td><td>Platinum II</td></tr>
-					          <tr><td>20</td><td>Platinum I</td></tr>
-					          <tr><td>21</td><td>Diamond V</td></tr>
-					          <tr><td>22</td><td>Diamond IV</td></tr>
-					          <tr><td>23</td><td>Diamond III</td></tr>
-					          <tr><td>24</td><td>Diamond II</td></tr>
-					          <tr><td>25</td><td>Diamond I</td></tr>
-					          <tr><td>26</td><td>Ruby V</td></tr>
-					          <tr><td>27</td><td>Ruby IV</td></tr>
-					          <tr><td>28</td><td>Ruby III</td></tr>
-					          <tr><td>29</td><td>Ruby II</td></tr>
-					          <tr><td>30</td><td>Ruby I</td></tr>
+                            <tr><td>1</td><td>Bronze V</td></tr>
+                            <tr><td>2</td><td>Bronze IV</td></tr>
+                            <tr><td>3</td><td>Bronze III</td></tr>
+                            <tr><td>4</td><td>Bronze II</td></tr>
+                            <tr><td>5</td><td>Bronze I</td></tr>
+                            <tr><td>6</td><td>Silver V</td></tr>
+                            <tr><td>7</td><td>Silver IV</td></tr>
+                            <tr><td>8</td><td>Silver III</td></tr>
+                            <tr><td>9</td><td>Silver II</td></tr>
+                            <tr><td>10</td><td>Silver I</td></tr>
+                            <tr><td>11</td><td>Gold V</td></tr>
+                            <tr><td>12</td><td>Gold IV</td></tr>
+                            <tr><td>13</td><td>Gold III</td></tr>
+                            <tr><td>14</td><td>Gold II</td></tr>
+                            <tr><td>15</td><td>Gold I</td></tr>
+                            <tr><td>16</td><td>Platinum V</td></tr>
+                            <tr><td>17</td><td>Platinum IV</td></tr>
+                            <tr><td>18</td><td>Platinum III</td></tr>
+                            <tr><td>19</td><td>Platinum II</td></tr>
+                            <tr><td>20</td><td>Platinum I</td></tr>
+                            <tr><td>21</td><td>Diamond V</td></tr>
+                            <tr><td>22</td><td>Diamond IV</td></tr>
+                            <tr><td>23</td><td>Diamond III</td></tr>
+                            <tr><td>24</td><td>Diamond II</td></tr>
+                            <tr><td>25</td><td>Diamond I</td></tr>
+                            <tr><td>26</td><td>Ruby V</td></tr>
+                            <tr><td>27</td><td>Ruby IV</td></tr>
+                            <tr><td>28</td><td>Ruby III</td></tr>
+                            <tr><td>29</td><td>Ruby II</td></tr>
+                            <tr><td>30</td><td>Ruby I</td></tr>
                         </tbody>
                     </table>
 
                     <label for="minAcceptableUserCount">최소 제출자 수:</label>
-                    <input type="number" id="minAcceptableUserCount" name="minAcceptableUserCount">
+                    <input type="number" id="minAcceptableUserCount" name="minAcceptableUserCount" value="0">
 
                     <label for="maxAcceptableUserCount">최대 제출자 수:</label>
-                    <input type="number" id="maxAcceptableUserCount" name="maxAcceptableUserCount">
+                    <input type="number" id="maxAcceptableUserCount" name="maxAcceptableUserCount" value="10000000">
                 </fieldset>
 
                 <fieldset>
