@@ -1,15 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:include page="header.jsp" />
 <html>
 <head>
-    <title>JSP Frontend</title>
+    <title>Mockcote</title>
 </head>
 <body>
-    <h1>JSP Frontend Page</h1>
-    <p>Message: ${message}</p>
-
-	<a href="/join">회원가입</a>
-	<a href="/mypage">마이페이지</a>
+    
 
 </body>
 </html>
