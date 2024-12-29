@@ -14,6 +14,8 @@
 </div>
 <hr>
 <script>
+	const BASE_URL = "${gatewayUrl}";
+
     document.addEventListener("DOMContentLoaded", () => {
         const accessToken = localStorage.getItem('accessToken');
         const guestButtons = document.getElementById('guestButtons');
@@ -32,7 +34,8 @@
         // 로그아웃 버튼 클릭 이벤트
         logoutButton.addEventListener('click', async () => {
             try {
-                const response = await fetch('/auth/logout', {
+                console.log('로그아웃 요청 시작'); // 로그아웃 요청 시작 로그
+                const response = await fetch(BASE_URL + '/auth/logout', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -41,12 +44,19 @@
                     credentials: 'include' // 쿠키 포함
                 });
 
+                // 응답 상태 및 데이터 확인
+                console.log('응답 상태:', response.status);
+                console.log('응답 상태 텍스트:', response.statusText);
+
                 if (response.ok) {
+                    // 로컬 스토리지 및 세션 스토리지 정보 제거
                     localStorage.removeItem('accessToken'); // 로컬스토리지에서 토큰 제거
                     alert('로그아웃되었습니다.');
                     location.reload(); // 페이지 새로고침
                 } else {
-                    alert('로그아웃에 실패했습니다.');
+                    const errorData = await response.json();
+                    console.error('로그아웃 실패 상세:', errorData); // 서버가 보낸 에러 메시지
+                    alert(`로그아웃에 실패했습니다. 상태 코드: ${response.status}`);
                 }
             } catch (error) {
                 console.error('로그아웃 요청 중 오류 발생:', error);

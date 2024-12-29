@@ -100,7 +100,7 @@ input {
 
     <script>
         const BASE_URL = "${gatewayUrl}";
-
+        
         function submitLogin() {
             const userId = document.getElementById('userId').value;
             const password = document.getElementById('password').value;
@@ -123,10 +123,16 @@ input {
             .then(data => {
                 // 로컬 스토리지에 값 저장
                 localStorage.setItem('accessToken', data.accessToken);
-                alert('로그인 성공');
-                window.location.href = '/'; // 메인 페이지로 이동
+                alert('로그인에 성공했습니다.');
+                console.log('저장된 데이터:', data);
+
+                // 메인 페이지로 이동
+                window.location.href = "/";
             })
-            .catch(error => alert(error.message));
+            .catch(error => {
+                console.error('로그인 오류:', error);
+                alert(error.message);
+            });
         }
     </script>
 </body>

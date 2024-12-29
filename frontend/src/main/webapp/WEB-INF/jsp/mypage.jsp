@@ -5,7 +5,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마이페이지</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="/js/authFetch.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 40px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+        }
+        th {
+            background-color: #3498db;
+            color: #fff;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        tr:hover {
+            background-color: #f1f3f5;
+        }
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            th {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            tr {
+                margin-bottom: 15px;
+            }
+            td {
+                padding-left: 50%;
+                position: relative;
+            }
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 15px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: 500;
+                text-align: left;
+                color: #7f8c8d;
+            }
+        }
+    </style>
     <script>
         const BASE_URL = "${gatewayUrl}";
         const handle = "${cookie.handle.value}";
@@ -18,10 +90,10 @@
                 tableBody.innerHTML = ''; // 기존 내용 초기화
 
                 const row = document.createElement('tr');
-                row.innerHTML = '<td>' + userStats.totalProblems + '</td><td>'
-                                + userStats.solvedProblems + '</td><td>'
-                                + userStats.failedProblems + '</td><td>'
-                                + userStats.successRate + '%</td><td>'
+                row.innerHTML = '<td data-label="시도한 문제 횟수">' + userStats.totalProblems + '</td><td data-label="성공한 문제 횟수">'
+                                + userStats.solvedProblems + '</td><td data-label="실패한 문제 횟수">'
+                                + userStats.failedProblems + '</td><td data-label="성공률">'
+                                + userStats.successRate + '%</td><td data-label="걸린 시간 평균">'
                                 + userStats.averageDuration + '초</td>';
                 tableBody.appendChild(row);
             } catch (error) {
@@ -38,7 +110,7 @@
 
                 tagStats.forEach(stat => {
                     const row = document.createElement('tr');
-                    row.innerHTML = '<td>' + stat.tagName + '</td><td>' + stat.solvedCount + '</td>';
+                    row.innerHTML = '<td data-label="태그">' + stat.tagName + '</td><td data-label="풀이 수">' + stat.solvedCount + '</td>';
                     tableBody.appendChild(row);
                 });
             } catch (error) {
@@ -55,7 +127,7 @@
 
                 levelStats.forEach(stat => {
                     const row = document.createElement('tr');
-                    row.innerHTML = '<td>' + stat.levelName + '</td><td>' + stat.solved + '</td>';
+                    row.innerHTML = '<td data-label="레벨">' + stat.levelName + '</td><td data-label="풀이 수">' + stat.solved + '</td>';
                     tableBody.appendChild(row);
                 });
             } catch (error) {
@@ -65,7 +137,7 @@
 
         // 페이지 로드 시 데이터 가져오기
         window.onload = function () {
-            fetchUserStats()
+            fetchUserStats();
             fetchTagStats();
             fetchLevelStats();
         };
@@ -75,7 +147,7 @@
     <h1>마이페이지</h1>
 
     <h2>사용자 통계</h2>
-    <table border="1">
+    <table>
         <thead>
             <tr>
                 <th>시도한 문제 횟수</th>
@@ -91,7 +163,7 @@
     </table>
 
     <h2>태그별 문제 풀이 통계</h2>
-    <table border="1">
+    <table>
         <thead>
             <tr>
                 <th>태그</th>
@@ -104,7 +176,7 @@
     </table>
 
     <h2>레벨별 문제 풀이 통계</h2>
-    <table border="1">
+    <table>
         <thead>
             <tr>
                 <th>레벨</th>
