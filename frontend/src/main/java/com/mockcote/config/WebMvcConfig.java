@@ -23,6 +23,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @PostConstruct
     public void init() {
+    	System.out.println("gatewayUrl 설정: " + gatewayUrl);
         servletContext.setAttribute("gatewayUrl", gatewayUrl);
     }
 

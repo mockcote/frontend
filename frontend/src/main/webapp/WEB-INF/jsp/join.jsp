@@ -59,6 +59,7 @@ button {
 .signup-button {
     background-color: #28a745;
     color: #fff;
+    margin-top: 20px;
 }
 
 .signup-button:hover {
@@ -89,10 +90,60 @@ button {
     line-height: 100vh;
     z-index: 1000;
 }
+
+/* 문제번호 안내 메시지 스타일 */
+#problemMessageContainer {
+    background-color: #e9f7fe;
+    border: 1px solid #007bff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* 문제번호 텍스트 스타일 */
+#problemMessageContainer p {
+    color: #0056b3;
+    font-weight: bold;
+}
+
+/* 하이퍼링크 스타일 */
+#problemLink {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* 하이퍼링크 hover 효과 */
+#problemLink:hover {
+    background-color: #0056b3;
+}
+
+/* 코드 제출 완료 버튼 스타일 */
+#submitCodeButton {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* 코드 제출 완료 버튼 hover 효과 */
+#submitCodeButton:hover {
+    background-color: #218838;
+}
 </style>
 <script>
-    const BASE_URL = "${gatewayUrl}";
-
+    const BASE_URL = "${gatewayUrl}";    
     document.addEventListener("DOMContentLoaded", () => {
         const handleAuthButton = document.getElementById("handleAuthButton");
         const handleInput = document.getElementById("handle");
@@ -102,67 +153,104 @@ button {
 
         let isDynamicElementsVisible = false;
         let isHandleAuthSuccessful = false;
+        let problemId = null; // 문제 번호 저장
 
-        handleAuthButton.addEventListener("click", () => {
+        // 핸들 인증 버튼 클릭 이벤트
+        handleAuthButton.addEventListener("click", async () => {
             if (!isDynamicElementsVisible) {
-                const problemInput = document.createElement("input");
-                problemInput.type = "text";
-                problemInput.id = "problem";
-                problemInput.placeholder = "문제 번호를 입력하세요";
+                loadingOverlay.style.display = "block";
 
-                const confirmButton = document.createElement("button");
-                confirmButton.id = "confirmButton";
-                confirmButton.textContent = "확인";
+                try {
+                    // 문제 번호 요청
+                    const response = await fetch(BASE_URL + "/problems/problem/random");
+                    if (response.ok) {
+                        // 문제 번호 가져오기
+                        problemId = await response.text();
 
-                dynamicElementsContainer.appendChild(problemInput);
-                dynamicElementsContainer.appendChild(confirmButton);
+                        console.log("problemId: ", problemId);
 
-                confirmButton.addEventListener("click", async () => {
-                    const handle = handleInput.value;
-                    const problem = problemInput.value;
+                        // 문제 번호 안내 메시지 추가
+                        const messageContainer = document.createElement("div");
+                        messageContainer.id = "problemMessageContainer";
 
-                    if (!handle || !problem) {
-                        alert("핸들과 문제 번호를 입력해주세요.");
-                        return;
-                    }
+                        const messageText = document.createElement("p");
+                        messageText.textContent = "문제번호: " + problemId + " 로 백준에서 코드를 제출하세요.";
 
-                    loadingOverlay.style.display = "block";
+                        // 백준 문제로 이동하는 링크 추가
+                        const problemLink = document.createElement("a");
+                        problemLink.id = "problemLink";
+                        problemLink.href = "https://www.acmicpc.net/problem/"+problemId;
+                        problemLink.target = "_blank"; // 새 창에서 열기
+                        problemLink.textContent = "문제 풀러 가기";
 
-                    try {
-                        const response = await fetch(BASE_URL + "/auth/handle-auth", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify({ handle, problem })
+                        // 코드 제출 완료 버튼 추가
+                        const submitCodeButton = document.createElement("button");
+                        submitCodeButton.id = "submitCodeButton";
+                        submitCodeButton.textContent = "코드 제출 완료";
+
+                        // 코드 제출 완료 버튼 이벤트 핸들러
+                        submitCodeButton.addEventListener("click", async () => {
+                            const handle = handleInput.value;
+                            if (!handle) {
+                                alert("핸들을 입력하세요.");
+                                return;
+                            }
+
+                            loadingOverlay.style.display = "block";
+
+                            try {
+                                // 핸들 인증 요청
+                                const authResponse = await fetch(BASE_URL + "/auth/handle-auth", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json"
+                                    },
+                                    body: JSON.stringify({ handle, problem: problemId })
+                                });
+
+                                if (authResponse.ok) {
+                                    alert("핸들 인증이 완료되었습니다.");
+                                    dynamicElementsContainer.innerHTML = ""; // 동적 요소 제거
+                                    handleAuthButton.disabled = true; // 핸들 인증 버튼 비활성화
+                                    isDynamicElementsVisible = false;
+                                    isHandleAuthSuccessful = true;
+                                } else {
+                                    alert("핸들 인증에 실패했습니다.");
+                                }
+                            } catch (error) {
+                                console.error("핸들 인증 중 오류 발생:", error);
+                                alert("서버 오류가 발생했습니다.");
+                            } finally {
+                                loadingOverlay.style.display = "none";
+                            }
                         });
 
-                        if (response.ok) {
-                            alert("핸들 인증이 완료되었습니다.");
-                            dynamicElementsContainer.innerHTML = "";
-                            handleAuthButton.disabled = true;
-                            isDynamicElementsVisible = false;
-                            isHandleAuthSuccessful = true;
-                        } else {
-                            alert("핸들 인증에 실패했습니다.");
-                            isHandleAuthSuccessful = false;
-                        }
-                    } catch (error) {
-                        console.error("핸들 인증 중 오류 발생:", error);
-                        alert("서버 오류가 발생했습니다.");
-                        isHandleAuthSuccessful = false;
-                    } finally {
-                        loadingOverlay.style.display = "none";
-                    }
-                });
+                        // 동적 요소 추가
+                        dynamicElementsContainer.innerHTML = ""; // 기존 요소 제거
+                        dynamicElementsContainer.appendChild(messageContainer);
+                        messageContainer.appendChild(messageText);
+                        messageContainer.appendChild(problemLink);
+                        messageContainer.appendChild(submitCodeButton);
 
-                isDynamicElementsVisible = true;
+                        isDynamicElementsVisible = true;
+                    } else {
+                        console.error("HTTP 상태 코드:", response.status);
+                        console.error("응답 내용:", await response.text());
+                        alert("문제 번호를 가져오는 데 실패했습니다.");
+                    }
+                } catch (error) {
+                    console.error("문제 번호 요청 중 오류 발생:", error);
+                    alert("서버 오류가 발생했습니다.");
+                } finally {
+                    loadingOverlay.style.display = "none";
+                }
             } else {
-                dynamicElementsContainer.innerHTML = "";
+                dynamicElementsContainer.innerHTML = ""; // 동적 요소 제거
                 isDynamicElementsVisible = false;
             }
         });
 
+        // 회원가입 제출 이벤트
         signupForm.addEventListener("submit", async (event) => {
             event.preventDefault();
 
@@ -190,6 +278,7 @@ button {
                 });
 
                 if (response.ok) {
+                	window.location.href = "/login"; // 로그인 페이지로 이동
                     alert("회원가입에 성공했습니다!");
                 } else {
                     alert("회원가입에 실패했습니다.");
@@ -201,6 +290,7 @@ button {
         });
     });
 </script>
+
 </head>
 <body>
     <div id="loadingOverlay">로딩 중...</div>
