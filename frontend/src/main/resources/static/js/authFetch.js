@@ -40,6 +40,7 @@ async function authFetch(url, options = {}) {
       });
     } else {
       console.error("Failed to refresh token. Redirecting to login page...");
+      localStorage.clear();
       window.location.href = "/login"; // 로그인 페이지로 리다이렉트
       return;
     }
