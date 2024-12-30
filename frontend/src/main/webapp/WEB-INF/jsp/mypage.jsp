@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<jsp:include page="header.jsp" />
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -79,7 +80,6 @@
         }
     </style>
     <script>
-        const BASE_URL = "${gatewayUrl}";
         const handle = "${cookie.handle.value}";
 
         // 유저 통계 가져오기
