@@ -100,13 +100,31 @@ button:hover {
 	text-align: center;
 }
 </style>
-	<script src="/js/authFetch.js"></script>
+<script src="/js/authFetch.js"></script>
 <script>
     const BASE_URL = "${gatewayUrl}"; // API 요청 기본 URL
 	const handle = "${cookie.handle.value}";
 
     let startTime; // 시작 시간 : 페이지 onload될 때 셋 되게 했
     let timerInterval; // 타이머 ID
+
+	// 풀이 시작
+	function timeStart() {
+		return authFetch(BASE_URL + "/submissions/start", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ handle: handle })
+		})
+			.then(res => res.text())
+			.then(data => {
+				startTime = new Date(data); // 서버에서 반환된 데이터를 Date 객체로 변환
+				console.log("startTime 설정:", startTime);
+			})
+			.catch(err => {
+				console.error("풀이 시작 중 오류 발생: ", err);
+				throw err; // 오류를 호출한 쪽으로 전달
+			});
+	}
 
     // 타이머 업데이트 함수 
     function updateTimer() {
@@ -213,21 +231,46 @@ button:hover {
             .catch(err => console.error("점수 증가 중 오류 발생:", err));
     }
 
-    window.onload = function () {
-        startTime = new Date();
-        const formattedStartTime = startTime.getHours().toString().padStart(2, "0") + ":" +
-                                   startTime.getMinutes().toString().padStart(2, "0");
+	// 그만하기
+	function back() {
+		authFetch(BASE_URL+"/submissions/end", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({handle: handle})
+		})
+				.then(response => {
+					if(response.status === 204) window.location.href='/problem';
+				})
+				.catch(err => console.error("뒤로가기 중 오류 발생: ", err));
+	}
 
-        console.log("시작 시간:", formattedStartTime);
+	window.onload = async function () {
+		try {
+			// timeStart가 완료될 때까지 기다림
+			await timeStart();
 
-        document.getElementById("problemLink").innerText = ${problemId};
-        document.getElementById("problemLink").href = "https://www.acmicpc.net/problem/" + ${problemId};
-        document.getElementById("startTime").innerText = formattedStartTime;
-        document.getElementById("limitTime").innerText = ${limitTime} + "분";
+			console.log("timeStart 완료");
+			console.log("시작 시간:", startTime);
 
-        updateTimer();
-        timerInterval = setInterval(updateTimer, 1000);
-    };
+			// 시작 시간 포맷팅
+			const formattedStartTime = startTime.getHours().toString().padStart(2, "0") + ":" +
+									   startTime.getMinutes().toString().padStart(2, "0");
+
+			document.getElementById("problemLink").innerText = ${problemId};
+			document.getElementById("problemLink").href = "https://www.acmicpc.net/problem/" + ${problemId};
+			document.getElementById("startTime").innerText = formattedStartTime;
+
+			document.getElementById("limitTime").innerText = ${limitTime} + "분";
+
+			// 타이머 초기화 및 시작
+			updateTimer();
+			timerInterval = setInterval(updateTimer, 1000);
+
+		} catch (error) {
+			console.error("페이지 로드 중 오류 발생:", error);
+			alert("페이지 로드 중 문제가 발생했습니다.");
+		}
+	};
 </script>
 </head>
 <body>
@@ -247,8 +290,7 @@ button:hover {
 			<option value="C++">C++</option>
 		</select>
 		<button class="btn btn-primary" onclick="checkSubmission()">풀이 완료</button>
-		<button class="btn btn-secondary" onclick="history.back()">돌아가기</button>
-		<button class="btn btn-warning" onclick="window.location.href='/'">홈</button>
+		<button class="btn btn-warning" onclick="back()">그만하기</button>
 	</div>
 </body>
 </html>

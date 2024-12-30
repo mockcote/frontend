@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List, java.util.Map" %>
 <%@ page import="com.mockcote.util.LevelLoader" %>
+<jsp:include page="header.jsp" />
 <html>
 <head>
     <title>사용자 통계</title>
