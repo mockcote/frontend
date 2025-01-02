@@ -110,12 +110,10 @@ button:hover {
 
 	// 풀이 시작
 	function timeStart() {
-    	
-    	console.log ("base_url : ",BASE_URL);
 		return authFetch(BASE_URL + "/submissions/start", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ handle: handle })
+			body: JSON.stringify({ handle: handle, problemId: ${problemId} })
 		})
 			.then(res => res.text())
 			.then(data => {
@@ -247,7 +245,7 @@ button:hover {
 		authFetch(BASE_URL+"/submissions/end", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({handle: handle})
+            body: JSON.stringify({handle: handle, problemId: ${problemId}})
 		})
 				.then(response => {
 					if(response.status === 204) {
