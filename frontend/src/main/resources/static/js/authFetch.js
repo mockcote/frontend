@@ -1,6 +1,7 @@
 // 공통 Fetch 함수
 async function authFetch(url, options = {}) {
   const accessToken = localStorage.getItem("accessToken"); // 액세스 토큰 가져오기
+  
 
   if (!accessToken) {
     console.error("No access token found. Redirecting to login page...");
@@ -19,7 +20,7 @@ async function authFetch(url, options = {}) {
     ...options,
     headers,
   });
-
+  
   // 토큰 만료 시 재발급 시도
   if (response.status === 401) {
     console.log("Access token expired. Refreshing token...");
