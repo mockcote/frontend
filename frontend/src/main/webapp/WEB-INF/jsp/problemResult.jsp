@@ -159,11 +159,22 @@ p {
             );
         }
 
-        // 메시지 수신 (자식 창에서 작업 완료 메시지 받기)
-        window.addEventListener('message', (event) => {
-            if (event.origin !== window.location.origin) return; // 안전성을 위해 도메인 체크
-            if (event.data === 'taskComplete') {
-                window.location.href = `/problem/rank?problemId=<%=request.getAttribute("problemId")%>`;
+     // 자식 창 상태 변경 메시지 처리
+        window.addEventListener("message", (event) => {
+            if (event.origin !== window.location.origin) return; // 도메인 확인
+
+            switch (event.data) {
+                case 'taskComplete':
+                    window.location.href = `/problem/rank?problemId=<%=request.getAttribute("problemId")%>`;
+                    break;
+                case 'stop':
+                    window.location.href = "/problem";
+                    break;
+                case 'redirectToLogin':
+                    window.location.href = "/login";
+                    break;
+                default:
+                    console.warn("알 수 없는 메시지:", event.data);
             }
         });
     </script>
@@ -182,19 +193,13 @@ p {
 				<%=request.getAttribute("problemId")%></p>
 			<p>
 				<strong>문제 제목:</strong>
-				<%=request.getAttribute("problemInfo") != null
-		? ((Map<String, Object>) request.getAttribute("problemInfo")).get("title")
-		: "N/A"%></p>
+				<%=request.getAttribute("problemInfo") != null ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("title") : "N/A"%></p>
 			<p>
 				<strong>난이도:</strong>
-				<%=request.getAttribute("problemInfo") != null
-		? ((Map<String, Object>) request.getAttribute("problemInfo")).get("levelName")
-		: "N/A"%></p>
+				<%=request.getAttribute("problemInfo") != null ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("levelName") : "N/A"%></p>
 			<p>
 				<strong>제출한 사용자 수:</strong>
-				<%=request.getAttribute("problemInfo") != null
-		? ((Map<String, Object>) request.getAttribute("problemInfo")).get("acceptableUserCount")
-		: "N/A"%></p>
+				<%=request.getAttribute("problemInfo") != null ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("acceptableUserCount") : "N/A"%></p>
 			<button id="toggleTagsButton"
 				class="btn btn-secondary toggle-tags-btn" onclick="toggleTags()">태그
 				보기</button>
