@@ -56,7 +56,6 @@
         // handle과 problemId를 JavaScript 변수로 설정
         const handle = "${cookie.handle.value}";
         const problemId = <%= request.getAttribute("problemId") %>;
-        //const BASE_URL = "${gatewayUrl}"; 헤더에서 선언해서 중복 url
 
         async function checkAndProceedRanking(event) {
             event.preventDefault(); // 폼의 기본 제출 동작을 막음
