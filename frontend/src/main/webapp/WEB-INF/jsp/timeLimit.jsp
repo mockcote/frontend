@@ -110,6 +110,8 @@ button:hover {
 
 	// 풀이 시작
 	function timeStart() {
+    	
+    	console.log ("base_url : ",BASE_URL);
 		return authFetch(BASE_URL + "/submissions/start", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -207,7 +209,16 @@ button:hover {
             .then(response => {
                 if (response.status === 201) {
                     alert("풀이 결과가 저장되었습니다.");
-                    window.location.href = "/problem/rank?problemId=" + ${problemId};
+                    /* window.location.href = "/problem/rank?problemId=" + ${problemId}; */
+                    
+                 // 부모 창에 작업 완료 메시지 보내기
+                    if (window.opener) {
+                        window.opener.postMessage('taskComplete', window.location.origin);
+                    }
+
+                    // 자식 창 닫기
+                    window.close();
+                    
                 } else {
                     console.error("응답 상태 코드:", response.status);
                     alert("결과 저장에 실패했습니다. 상태 코드: " + response.status);
@@ -239,7 +250,23 @@ button:hover {
             body: JSON.stringify({handle: handle})
 		})
 				.then(response => {
-					if(response.status === 204) window.location.href='/problem';
+					if(response.status === 204) {
+						//window.location.href='/problem';
+						
+						// 부모 창에 작업 완료 메시지 보내기
+		                // 부모 창에 작업 완료 메시지 보내기
+                    if (window.opener) {
+                        window.opener.postMessage('taskComplete', window.location.origin);
+                    }
+
+                    // 자식 창 닫기
+                    window.close();
+
+		                // 현재 창 닫기
+		                window.close();
+						
+						
+					}
 				})
 				.catch(err => console.error("뒤로가기 중 오류 발생: ", err));
 	}
