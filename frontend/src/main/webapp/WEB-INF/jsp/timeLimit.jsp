@@ -249,25 +249,43 @@ button:hover {
 		})
 				.then(response => {
 					if(response.status === 204) {
-						//window.location.href='/problem';
 						
-						// 부모 창에 작업 완료 메시지 보내기
 		                // 부모 창에 작업 완료 메시지 보내기
                     if (window.opener) {
-                        window.opener.postMessage('taskComplete', window.location.origin);
+                        window.opener.postMessage('stop', window.location.origin);
                     }
 
                     // 자식 창 닫기
                     window.close();
-
-		                // 현재 창 닫기
-		                window.close();
-						
 						
 					}
 				})
 				.catch(err => console.error("뒤로가기 중 오류 발생: ", err));
 	}
+	
+	// 자식 창
+	window.addEventListener('message', (event) => {
+	  if (event.origin !== window.location.origin) return; // 도메인 검증
+
+	  if (event.data === 'logoutDetected') {
+	    alert('로그아웃되었습니다. 다시 로그인해주세요.');
+	    
+	    // 여기서 end api 호출을 하디, 냅두고start할 때 체크를 하기 (authFetch.js에서 바로 자식창 닫고 부모창한테 이벤트 보내지 않은 이유는 혹시 여기서 end 호출해야 할까)
+	    // 만약 여기서 end 호출 안 하고 문제 풀기에서 start 시 체크하게 된다면 authFetch에서 바로 부모로 이벤트 보내고, 자식창 바로 끌 예정
+	    
+	 // 부모 창에 메시지 전송
+	    if (window.opener) {
+	      window.opener.postMessage('redirectToLogin', window.location.origin);
+	    }
+
+	    // 자식 창 닫기
+	    window.close();
+	    
+	  }
+	});
+
+
+	
 
 	window.onload = async function () {
 		try {
@@ -301,20 +319,30 @@ button:hover {
 <body>
 	<div class="container">
 		<h1>문제 풀이 페이지</h1>
-		<p>문제 링크: <a id="problemLink" target="_blank"></a></p>
+		<p>
+			문제 링크: <a id="problemLink" target="_blank"></a>
+		</p>
 		<div class="time-status">
-			<p>시작 시간: <span id="startTime"></span></p>
-			<p>제한 시간: <span id="limitTime"></span></p>
-			<p>남은 시간: <span id="timeLeft"></span></p>
-			<p>풀이 상태: <span id="status"></span></p>
+			<p>
+				시작 시간: <span id="startTime"></span>
+			</p>
+			<p>
+				제한 시간: <span id="limitTime"></span>
+			</p>
+			<p>
+				남은 시간: <span id="timeLeft"></span>
+			</p>
+			<p>
+				풀이 상태: <span id="status"></span>
+			</p>
 		</div>
-		<label for="language">사용 언어:</label>
-		<select id="language">
+		<label for="language">사용 언어:</label> <select id="language">
 			<option value="Java">Java</option>
 			<option value="Python">Python</option>
 			<option value="C++">C++</option>
 		</select>
-		<button class="btn btn-primary" onclick="checkSubmission()">풀이 완료</button>
+		<button class="btn btn-primary" onclick="checkSubmission()">풀이
+			완료</button>
 		<button class="btn btn-warning" onclick="back()">그만하기</button>
 	</div>
 </body>

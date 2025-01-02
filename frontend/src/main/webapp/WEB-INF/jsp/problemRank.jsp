@@ -83,8 +83,15 @@
                         // 제한시간 설정 및 리다이렉트
                         const limitTime = prompt("제한시간(분)을 입력해주세요:", "30");
                         if (limitTime && !isNaN(limitTime) && parseInt(limitTime) > 0) {
-                            // 리다이렉트
-                            window.location.href = '/time?problemId='+problemId+'&limitTime='+limitTime;
+                        	// 새 창으로 열기
+                            const url = `/time?problemId=${problemId}&limitTime=`+limitTime;
+                            console.log("새 창 열기 URL:", url); // URL 확인용 로그
+                            
+                            const childWindow = window.open(
+                                url, // 자식 창 URL
+                                "childWindow",
+                                "width=800,height=600" // 창 크기 설정
+                            );
                         } else {
                             alert("올바른 제한시간을 입력해주세요.");
                         }
@@ -99,6 +106,26 @@
                 alert("서버 오류가 발생했습니다.");
             }
         }
+        
+     // 자식 창 상태 변경 메시지 처리
+        window.addEventListener("message", (event) => {
+            if (event.origin !== window.location.origin) return; // 도메인 확인
+
+            switch (event.data) {
+                case 'taskComplete':
+                case 'stop':
+                    window.location.href = `/problem/rank?problemId=<%=request.getAttribute("problemId")%>`;
+                    break;
+                case 'redirectToLogin':
+                    window.location.href = "/login";
+                    break;
+                default:
+                    console.warn("알 수 없는 메시지:", event.data);
+            }
+        });
+        
+        
+        
     </script>
 </head>
 <body>

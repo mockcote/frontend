@@ -2,11 +2,21 @@
 async function authFetch(url, options = {}) {
   const accessToken = localStorage.getItem("accessToken"); // 액세스 토큰 가져오기
   
+  // 자식 창인지 확인
+  const isChildWindow = window.opener && !window.opener.closed;
 
   if (!accessToken) {
-    console.error("No access token found. Redirecting to login page...");
-    window.location.href = "/login"; // 로그인 페이지로 리다이렉트
-    return;
+    //console.error("No access token found. Redirecting to login page...");
+    //window.location.href = "/login"; // 로그인 페이지로 리다이렉트
+    //return;
+	
+	if (isChildWindow) {
+		// 자식 창에서 로그아웃 상태 감지 시
+		    window.postMessage('logoutDetected', window.location.origin); // 부모 창에 메시지 전달
+	  } else {
+	    window.location.href = "/login"; // 부모 창에서는 쿼리 파라미터 없이 기본 로그인 리다이렉트
+	  }
+	  return;
   }
 
   // 기본 헤더 설정
