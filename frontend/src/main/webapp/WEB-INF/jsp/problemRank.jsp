@@ -51,6 +51,42 @@
         .btn:hover {
             background-color: #0056b3;
         }
+        /* 로딩 모달 스타일 */
+        .modal {
+            display: none; /* 기본적으로 숨김 */
+            position: fixed;
+            z-index: 1000; /* 다른 요소들보다 위에 표시 */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
+        }
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .spinner {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
     <script>
         // handle과 problemId를 JavaScript 변수로 설정
@@ -60,19 +96,20 @@
         async function checkAndProceedRanking(event) {
             event.preventDefault(); // 폼의 기본 제출 동작을 막음
 
+            // 로딩 모달 표시
+            showModal();
+
             try {
-            	console.log("handle: ",handle);
-            	console.log("problemId: ", problemId);
-            	
-                const response = await fetch(BASE_URL+"/problems/problem/has-solved", {
+                console.log("handle: ", handle);
+                console.log("problemId: ", problemId);
+                
+                const response = await fetch(BASE_URL + "/problems/problem/has-solved", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({ handle, problemId })
                 });
-                
-                
 
                 if (response.ok) {
                     const data = await response.json();
@@ -83,6 +120,7 @@
                         // 제한시간 설정 및 리다이렉트
                         const limitTime = prompt("제한시간(분)을 입력해주세요:", "30");
                         if (limitTime && !isNaN(limitTime) && parseInt(limitTime) > 0) {
+
                         	// 새 창으로 열기
                             const url = `/time?problemId=${problemId}&limitTime=`+limitTime;
                             console.log("새 창 열기 URL:", url); // URL 확인용 로그
@@ -104,6 +142,9 @@
             } catch (error) {
                 console.error("Error:", error);
                 alert("서버 오류가 발생했습니다.");
+            } finally {
+                // 로딩 모달 숨김
+                hideModal();
             }
         }
         
@@ -123,9 +164,16 @@
                     console.warn("알 수 없는 메시지:", event.data);
             }
         });
-        
-        
-        
+
+
+        // 모달 제어 함수
+        function showModal() {
+            document.getElementById("loadingModal").style.display = "block";
+        }
+
+        function hideModal() {
+            document.getElementById("loadingModal").style.display = "none";
+        }
     </script>
 </head>
 <body>
@@ -160,6 +208,14 @@
         </table>
         <button class="btn" onclick="checkAndProceedRanking(event)">문제 풀기</button>
         <a href="/problem/list" class="btn" style="background-color: #6c757d; margin-left: 10px;">문제 목록으로 돌아가기</a>
+    </div>
+
+    <!-- 로딩 모달 HTML 추가 -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="spinner"></div>
+            <p>문제 풀이 여부 확인중...</p>
+        </div>
     </div>
 </body>
 </html>
