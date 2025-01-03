@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List, java.util.Map" %>
-
+<jsp:include page="header.jsp" />
 <html>
 <head>
     <title>문제 뽑기</title>

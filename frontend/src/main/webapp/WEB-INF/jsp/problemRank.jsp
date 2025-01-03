@@ -120,8 +120,9 @@
                         // 제한시간 설정 및 리다이렉트
                         const limitTime = prompt("제한시간(분)을 입력해주세요:", "30");
                         if (limitTime && !isNaN(limitTime) && parseInt(limitTime) > 0) {
-                            // 새 창으로 열기
-                            const url = `/time?problemId=${problemId}&limitTime=` + limitTime;
+
+                        	// 새 창으로 열기
+                            const url = `/time?problemId=${problemId}&limitTime=`+limitTime;
                             console.log("새 창 열기 URL:", url); // URL 확인용 로그
                             
                             const childWindow = window.open(
@@ -147,7 +148,7 @@
             }
         }
         
-        // 자식 창 상태 변경 메시지 처리
+     // 자식 창 상태 변경 메시지 처리
         window.addEventListener("message", (event) => {
             if (event.origin !== window.location.origin) return; // 도메인 확인
 
@@ -163,6 +164,7 @@
                     console.warn("알 수 없는 메시지:", event.data);
             }
         });
+
 
         // 모달 제어 함수
         function showModal() {

@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<jsp:include page="header.jsp" />
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -77,10 +78,32 @@
                 color: #7f8c8d;
             }
         }
+        .btn-detailed-stats {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .btn-detailed-stats:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-detailed-stats:active {
+            background-color: #1c6396;
+            box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.2);
+        }
     </style>
     <script>
-        const BASE_URL = "${gatewayUrl}";
         const handle = "${cookie.handle.value}";
+        let currentPage = 0; // 현재 페이지
+        let totalPages = 1; // 전체 페이지 수
 
         // 유저 통계 가져오기
         async function fetchUserStats() {
@@ -101,45 +124,101 @@
             }
         }
 
-        // 태그별 문제 수 가져오기
-        async function fetchTagStats() {
+        // 유저 히스토리 가져오기
+        async function fetchUserHistory() {
             try {
-                const tagStats = await authFetch(BASE_URL+"/stats/tags?handle="+handle).then((res) => res.json());
-                const tableBody = document.getElementById('tag-stats-body');
-                tableBody.innerHTML = ''; // 기존 내용 초기화
+                const response = await authFetch(BASE_URL + "/stats/history?handle=" + handle + "&page=" + currentPage);
+                const data = await response.json();
+                const userHistory = data.content;
+                totalPages = data.totalPages; // 전체 페이지 수 업데이트
 
-                tagStats.forEach(stat => {
+                const historyBody = document.getElementById('user-history-body');
+                historyBody.innerHTML = ''; // 기존 내용 초기화
+
+                userHistory.forEach(history => {
                     const row = document.createElement('tr');
-                    row.innerHTML = '<td data-label="태그">' + stat.tagName + '</td><td data-label="풀이 수">' + stat.solvedCount + '</td>';
-                    tableBody.appendChild(row);
+                    const startTime = new Date(history.startTime);
+                    const formattedStartTime = startTime.getFullYear().toString() + "-"
+                        + (startTime.getMonth() + 1).toString().padStart(2, "0") + "-"
+                        + startTime.getDate().toString().padStart(2, "0") + " "
+                        + startTime.getHours().toString().padStart(2, "0") + ":"
+                        + startTime.getMinutes().toString().padStart(2, "0");
+
+                    row.innerHTML =
+                        '<td data-label="문제 번호"><a href="/problem/rank?problemId='+history.problemId+'">'+ history.problemId
+                        + '</a></td><td data-label="풀이 상태">' + history.status
+                        + '</td><td data-label="소요 시간">' + history.duration
+                        + '초</td><td data-label="사용 언어">' + history.language
+                        + '</td><td data-label="시작 시간">' + formattedStartTime
+                        + '</td>';
+                    historyBody.appendChild(row);
                 });
+
+                createPaginationButtons(); // 페이지네이션 버튼 생성
             } catch (error) {
-                console.error('태그별 문제 수 가져오기 실패:', error);
+                console.error('유저 히스토리 가져오기 실패:', error);
             }
         }
 
-        // 레벨별 문제 수 가져오기
-        async function fetchLevelStats() {
-            try {
-                const levelStats = await authFetch(BASE_URL+"/stats/levels?handle="+handle).then((res) => res.json());
-                const tableBody = document.getElementById('level-stats-body');
-                tableBody.innerHTML = ''; // 기존 내용 초기화
+        // 페이지네이션 버튼
+        function createPaginationButtons() {
+            const paginationDiv = document.getElementById('pagination');
 
-                levelStats.forEach(stat => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = '<td data-label="레벨">' + stat.levelName + '</td><td data-label="풀이 수">' + stat.solved + '</td>';
-                    tableBody.appendChild(row);
-                });
-            } catch (error) {
-                console.error('레벨별 문제 수 가져오기 실패:', error);
+            // 이전/다음 버튼 참조
+            const prevButton = document.getElementById('prev-page');
+            const nextButton = document.getElementById('next-page');
+
+            // 이전 버튼 활성화/비활성화
+            prevButton.disabled = currentPage === 0;
+            prevButton.onclick = function () {
+                if (currentPage > 0) {
+                    currentPage--;
+                    fetchUserHistory();
+                }
+            };
+
+            // 다음 버튼 활성화/비활성화
+            nextButton.disabled = currentPage === totalPages - 1;
+            nextButton.onclick = function () {
+                if (currentPage < totalPages - 1) {
+                    currentPage++;
+                    fetchUserHistory();
+                }
+            };
+
+            // 페이지 번호 버튼 생성 (기존 로직 유지)
+            const pageButtons = document.createElement('span');
+            pageButtons.style.margin = '0 10px';
+            paginationDiv.innerHTML = ''; // 기존 버튼 초기화
+            paginationDiv.appendChild(prevButton);
+
+            for (let i = 0; i < totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i + 1;
+                button.style.margin = '0 5px';
+                button.disabled = i === currentPage;
+
+                button.onclick = function () {
+                    currentPage = i;
+                    fetchUserHistory();
+                };
+
+                pageButtons.appendChild(button);
             }
+
+            paginationDiv.appendChild(pageButtons);
+            paginationDiv.appendChild(nextButton);
+        }
+
+        // 상세 통계 페이지 이동
+        function goToDetailedStats() {
+            window.location.href = "/stat?handle=" + handle;
         }
 
         // 페이지 로드 시 데이터 가져오기
         window.onload = function () {
             fetchUserStats();
-            fetchTagStats();
-            fetchLevelStats();
+            fetchUserHistory();
         };
     </script>
 </head>
@@ -162,30 +241,29 @@
         </tbody>
     </table>
 
-    <h2>태그별 문제 풀이 통계</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>태그</th>
-                <th>풀이 수</th>
-            </tr>
-        </thead>
-        <tbody id="tag-stats-body">
-            <!-- 태그별 문제 수 데이터가 여기에 추가됨 -->
-        </tbody>
-    </table>
+    <div style="text-align: center; margin-bottom: 30px;">
+        <button class="btn-detailed-stats" onclick="goToDetailedStats()">상세 통계 보기</button>
+    </div>
 
-    <h2>레벨별 문제 풀이 통계</h2>
+    <h2>사용자 히스토리</h2>
     <table>
         <thead>
             <tr>
-                <th>레벨</th>
-                <th>풀이 수</th>
+                <th>문제 번호</th>
+                <th>풀이 상태</th>
+                <th>소요 시간</th>
+                <th>사용 언어</th>
+                <th>제출 시각</th>
             </tr>
         </thead>
-        <tbody id="level-stats-body">
-            <!-- 레벨별 문제 수 데이터가 여기에 추가됨 -->
+        <tbody id="user-history-body">
+            <!-- 유저 히스토리 데이터가 여기에 추가됨 -->
         </tbody>
     </table>
+    <div id="pagination" style="text-align: center; margin-top: 20px;">
+        <button id="prev-page" class="btn btn-secondary" disabled>이전</button>
+        <!-- 페이지 번호 버튼이 동적으로 추가됩니다 -->
+        <button id="next-page" class="btn btn-secondary" disabled>다음</button>
+    </div>
 </body>
 </html>

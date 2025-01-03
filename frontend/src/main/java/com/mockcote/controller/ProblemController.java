@@ -117,7 +117,7 @@ public class ProblemController {
             @RequestParam(value = "undesiredTags", required = false) String undesiredTags,
             Model model,
             @CookieValue(value = "handle", required = false) String handle, // 쿠키에서 handle 가져오기
-            HttpSession session) {
+            @CookieValue(value = "level", required = false) Integer level) {
 
         String problemMessage;
         Integer problemId = null;
@@ -167,7 +167,6 @@ public class ProblemController {
             } else if ("random-tag".equals(option)) {
                 // handle을 세션 대신 쿠키에서 가져온 값 사용
                 if (handle == null) handle = "";
-                Integer level = (Integer) session.getAttribute("level"); // level은 여전히 세션에서 가져옴
                 if (level == null) level = DEFAULT_LEVEL;
 
                 String randomTagApiUrl = "/problems/dbsave/tag/random-problem?handle=" + handle + "&level=" + level;
