@@ -95,6 +95,46 @@
         .toggle-button:hover {
             text-decoration: underline;
         }
+
+        /* **추가: 로딩 모달 스타일링** */
+        /* 로딩 모달 배경 */
+        .loading-modal {
+            display: none; /* 기본적으로 숨김 */
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
+        }
+
+        /* 로딩 모달 콘텐츠 */
+        .loading-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+        }
+
+        /* 로딩 스피너 */
+        .spinner {
+            border: 8px solid #f3f3f3; /* Light grey */
+            border-top: 8px solid #007bff; /* Blue */
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
     <script>
         function toggleDifficultyTable() {
@@ -125,6 +165,19 @@
             }
         }
 
+        // **추가: 로딩 모달 표시 함수**
+        function showLoadingModal() {
+            document.getElementById('loadingModal').style.display = 'block';
+        }
+
+        // **추가: 폼 제출 시 로딩 모달 표시**
+        window.addEventListener('DOMContentLoaded', (event) => {
+            const form = document.getElementById('problemPickForm');
+            form.addEventListener('submit', function() {
+                showLoadingModal();
+            });
+        });
+
         // setDefaultValues 함수는 기본 값이 HTML에서 설정되므로 필요 없을 수 있습니다.
         function setDefaultValues() {
             // 필요 시 추가 로직
@@ -142,7 +195,15 @@
             <p>현재 사용자: ${cookie.handle.value}</p>
         </c:if>
 
-        <form action="/problem/pick" method="post">
+        <!-- **추가: 로딩 모달 HTML** -->
+        <div id="loadingModal" class="loading-modal">
+            <div class="loading-modal-content">
+                <div class="spinner"></div>
+                <p>문제를 뽑는 중입니다. 잠시만 기다려주세요...</p>
+            </div>
+        </div>
+
+        <form id="problemPickForm" action="/problem/pick" method="post">
             <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}" />
 
             <label>
