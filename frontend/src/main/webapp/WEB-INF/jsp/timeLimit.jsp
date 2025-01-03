@@ -100,13 +100,31 @@ button:hover {
 	text-align: center;
 }
 </style>
-	<script src="/js/authFetch.js"></script>
+<script src="/js/authFetch.js"></script>
 <script>
     const BASE_URL = "${gatewayUrl}"; // API 요청 기본 URL
 	const handle = "${cookie.handle.value}";
 
     let startTime; // 시작 시간 : 페이지 onload될 때 셋 되게 했
     let timerInterval; // 타이머 ID
+
+	// 풀이 시작
+	function timeStart() {
+		return authFetch(BASE_URL + "/submissions/start", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ handle: handle, problemId: ${problemId} })
+		})
+			.then(res => res.text())
+			.then(data => {
+				startTime = new Date(data); // 서버에서 반환된 데이터를 Date 객체로 변환
+				console.log("startTime 설정:", startTime);
+			})
+			.catch(err => {
+				console.error("풀이 시작 중 오류 발생: ", err);
+				throw err; // 오류를 호출한 쪽으로 전달
+			});
+	}
 
     // 타이머 업데이트 함수 
     function updateTimer() {
@@ -189,7 +207,16 @@ button:hover {
             .then(response => {
                 if (response.status === 201) {
                     alert("풀이 결과가 저장되었습니다.");
-                    window.location.href = "/problem/rank?problemId=" + ${problemId};
+                    /* window.location.href = "/problem/rank?problemId=" + ${problemId}; */
+                    
+                 // 부모 창에 작업 완료 메시지 보내기
+                    if (window.opener) {
+                        window.opener.postMessage('taskComplete', window.location.origin);
+                    }
+
+                    // 자식 창 닫기
+                    window.close();
+                    
                 } else {
                     console.error("응답 상태 코드:", response.status);
                     alert("결과 저장에 실패했습니다. 상태 코드: " + response.status);
@@ -213,42 +240,110 @@ button:hover {
             .catch(err => console.error("점수 증가 중 오류 발생:", err));
     }
 
-    window.onload = function () {
-        startTime = new Date();
-        const formattedStartTime = startTime.getHours().toString().padStart(2, "0") + ":" +
-                                   startTime.getMinutes().toString().padStart(2, "0");
+	// 그만하기
+	function back() {
+		authFetch(BASE_URL+"/submissions/end", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({handle: handle, problemId: ${problemId}})
+		})
+				.then(response => {
+					if(response.status === 204) {
+						
+		                // 부모 창에 작업 완료 메시지 보내기
+                    if (window.opener) {
+                        window.opener.postMessage('stop', window.location.origin);
+                    }
 
-        console.log("시작 시간:", formattedStartTime);
+                    // 자식 창 닫기
+                    window.close();
+						
+					}
+				})
+				.catch(err => console.error("뒤로가기 중 오류 발생: ", err));
+	}
+	
+	// 자식 창
+	window.addEventListener('message', (event) => {
+	  if (event.origin !== window.location.origin) return; // 도메인 검증
 
-        document.getElementById("problemLink").innerText = ${problemId};
-        document.getElementById("problemLink").href = "https://www.acmicpc.net/problem/" + ${problemId};
-        document.getElementById("startTime").innerText = formattedStartTime;
-        document.getElementById("limitTime").innerText = ${limitTime} + "분";
+	  if (event.data === 'logoutDetected') {
+	    alert('로그아웃되었습니다. 다시 로그인해주세요.');
+	    
+	    // 여기서 end api 호출을 하디, 냅두고start할 때 체크를 하기 (authFetch.js에서 바로 자식창 닫고 부모창한테 이벤트 보내지 않은 이유는 혹시 여기서 end 호출해야 할까)
+	    // 만약 여기서 end 호출 안 하고 문제 풀기에서 start 시 체크하게 된다면 authFetch에서 바로 부모로 이벤트 보내고, 자식창 바로 끌 예정
+	    
+	 // 부모 창에 메시지 전송
+	    if (window.opener) {
+	      window.opener.postMessage('redirectToLogin', window.location.origin);
+	    }
 
-        updateTimer();
-        timerInterval = setInterval(updateTimer, 1000);
-    };
+	    // 자식 창 닫기
+	    window.close();
+	    
+	  }
+	});
+
+
+	
+
+	window.onload = async function () {
+		try {
+			// timeStart가 완료될 때까지 기다림
+			await timeStart();
+
+			console.log("timeStart 완료");
+			console.log("시작 시간:", startTime);
+
+			// 시작 시간 포맷팅
+			const formattedStartTime = startTime.getHours().toString().padStart(2, "0") + ":" +
+									   startTime.getMinutes().toString().padStart(2, "0");
+
+			document.getElementById("problemLink").innerText = ${problemId};
+			document.getElementById("problemLink").href = "https://www.acmicpc.net/problem/" + ${problemId};
+			document.getElementById("startTime").innerText = formattedStartTime;
+
+			document.getElementById("limitTime").innerText = ${limitTime} + "분";
+
+			// 타이머 초기화 및 시작
+			updateTimer();
+			timerInterval = setInterval(updateTimer, 1000);
+
+		} catch (error) {
+			console.error("페이지 로드 중 오류 발생:", error);
+			alert("페이지 로드 중 문제가 발생했습니다.");
+		}
+	};
 </script>
 </head>
 <body>
 	<div class="container">
 		<h1>문제 풀이 페이지</h1>
-		<p>문제 링크: <a id="problemLink" target="_blank"></a></p>
+		<p>
+			문제 링크: <a id="problemLink" target="_blank"></a>
+		</p>
 		<div class="time-status">
-			<p>시작 시간: <span id="startTime"></span></p>
-			<p>제한 시간: <span id="limitTime"></span></p>
-			<p>남은 시간: <span id="timeLeft"></span></p>
-			<p>풀이 상태: <span id="status"></span></p>
+			<p>
+				시작 시간: <span id="startTime"></span>
+			</p>
+			<p>
+				제한 시간: <span id="limitTime"></span>
+			</p>
+			<p>
+				남은 시간: <span id="timeLeft"></span>
+			</p>
+			<p>
+				풀이 상태: <span id="status"></span>
+			</p>
 		</div>
-		<label for="language">사용 언어:</label>
-		<select id="language">
+		<label for="language">사용 언어:</label> <select id="language">
 			<option value="Java">Java</option>
 			<option value="Python">Python</option>
 			<option value="C++">C++</option>
 		</select>
-		<button class="btn btn-primary" onclick="checkSubmission()">풀이 완료</button>
-		<button class="btn btn-secondary" onclick="history.back()">돌아가기</button>
-		<button class="btn btn-warning" onclick="window.location.href='/'">홈</button>
+		<button class="btn btn-primary" onclick="checkSubmission()">풀이
+			완료</button>
+		<button class="btn btn-warning" onclick="back()">그만하기</button>
 	</div>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.mockcote.model.UserRanking" %>
+<jsp:include page="header.jsp" />
 <html>
 <head>
     <title>전체 사용자 랭킹</title>
