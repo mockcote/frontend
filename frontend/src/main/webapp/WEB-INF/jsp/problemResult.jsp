@@ -110,74 +110,75 @@ p {
 </style>
 <script>
 
-		let childWindow = null;
+	let childWindow = null;
 
-        function toggleTags() {
-            const tagList = document.getElementById("tagList");
-            const toggleButton = document.getElementById("toggleTagsButton");
+	function toggleTags() {
+		const tagList = document.getElementById("tagList");
+		const toggleButton = document.getElementById("toggleTagsButton");
 
-            if (tagList.style.display === "none") {
-                tagList.style.display = "block";
-                toggleButton.textContent = "태그 숨기기";
-            } else {
-                tagList.style.display = "none";
-                toggleButton.textContent = "태그 보기";
-            }
-        }
+		const currentDisplay = window.getComputedStyle(tagList).display;
 
-        function setLimitTime() {
-            const limitTimeInput = document.getElementById("limitTime");
-            const hiddenLimitTime = document.getElementById("hiddenLimitTime");
-            hiddenLimitTime.value = limitTimeInput.value;
-            
-            
-         // 값 검증
-            if (!hiddenLimitTime.value || isNaN(hiddenLimitTime.value) || hiddenLimitTime.value <= 0) {
-                alert("유효한 제한 시간을 입력해주세요!");
-                return false;
-            }
+		if (currentDisplay === "none") {
+			tagList.style.display = "block";
+			toggleButton.textContent = "태그 숨기기";
+		} else {
+			tagList.style.display = "none";
+			toggleButton.textContent = "태그 보기";
+		}
+	}
 
-            return true;
-        }
-        
-        function setLimitTimeAndOpenChild() {
-            // 제한시간 설정 및 검증
-            const isValid = setLimitTime();
-            if (!isValid) return; // 제한시간이 유효하지 않으면 중단
+	function setLimitTime() {
+		const limitTimeInput = document.getElementById("limitTime");
+		const hiddenLimitTime = document.getElementById("hiddenLimitTime");
+		hiddenLimitTime.value = limitTimeInput.value;
+		
+		// 값 검증
+		if (!hiddenLimitTime.value || isNaN(hiddenLimitTime.value) || hiddenLimitTime.value <= 0) {
+			alert("유효한 제한 시간을 입력해주세요!");
+			return false;
+		}
 
-            const problemId = "<%= request.getAttribute("problemId") %>"; // 문제 ID 가져오기
-            const limitTime = document.getElementById("hiddenLimitTime").value; // 설정된 제한 시간
-            
-			const url = `/time?problemId=${problemId}&limitTime=` + limitTime;
-            console.log("새 창 열기 URL:", url); // URL 확인용 로그
-            
-            // 자식 창 열기
-            childWindow = window.open(
-                url, // 자식 창 URL
-                'childWindow',
-                'width=800,height=600'
-            );
-        }
+		return true;
+	}
+	
+	function setLimitTimeAndOpenChild() {
+		// 제한시간 설정 및 검증
+		const isValid = setLimitTime();
+		if (!isValid) return; // 제한시간이 유효하지 않으면 중단
 
-     // 자식 창 상태 변경 메시지 처리
-        window.addEventListener("message", (event) => {
-            if (event.origin !== window.location.origin) return; // 도메인 확인
+		const problemId = "<%= request.getAttribute("problemId") %>"; // 문제 ID 가져오기
+		const limitTime = document.getElementById("hiddenLimitTime").value; // 설정된 제한 시간
+		
+		const url = `/time?problemId=${problemId}&limitTime=` + limitTime;
+		console.log("새 창 열기 URL:", url); // URL 확인용 로그
+		
+		// 자식 창 열기
+		childWindow = window.open(
+			url, // 자식 창 URL
+			'childWindow',
+			'width=800,height=600'
+		);
+	}
 
-            switch (event.data) {
-                case 'taskComplete':
-                    window.location.href = `/problem/rank?problemId=<%=request.getAttribute("problemId")%>`;
-                    break;
-                case 'stop':
-                    window.location.href = "/problem";
-                    break;
-                case 'redirectToLogin':
-                    window.location.href = "/login";
-                    break;
-                default:
-                    console.warn("알 수 없는 메시지:", event.data);
-            }
-        });
-    </script>
+	// 자식 창 상태 변경 메시지 처리
+	window.addEventListener("message", (event) => {
+		if (event.origin !== window.location.origin) return; // 도메인 확인
+
+		switch (event.data) {
+			case 'taskComplete':
+				window.location.href = `/problem/rank?problemId=<%=request.getAttribute("problemId")%>`;
+				break;
+			case 'stop':
+				window.location.href = "/problem";
+				break;
+			case 'redirectToLogin':
+				window.location.href = "/login";
+				break;
+			default:
+				console.warn("알 수 없는 메시지:", event.data);
+		}
+	});
+</script>
 </head>
 <body>
 	<div class="container">
