@@ -1,5 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.List, java.util.Map" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java"%>
+<%@ page import="java.util.List, java.util.Map"%>
+<jsp:include page="header.jsp" />
 <html>
 <head>
     <title>문제 결과</title>
@@ -106,20 +107,24 @@
             display: block;
             width: fit-content;
         }
+
+        /* **추가: .hidden 클래스 정의** */
+        .hidden {
+            display: none;
+        }
     </style>
     <script>
+        // **toggleTags 함수 수정: 클래스 토글링 사용**
         function toggleTags() {
-            const tagList = document.getElementById("tagList");
-            const toggleButton = document.getElementById("toggleTagsButton");
+            const tagList = document.getElementById("problemTagList");
+            const toggleButton = document.getElementById("problemToggleTagsButton");
 
-            // 컴퓨티드 스타일을 사용하여 실제 display 값을 가져옴
-            const style = window.getComputedStyle(tagList);
-            if (style.display === "none") {
-                tagList.style.display = "block";
-                toggleButton.textContent = "태그 숨기기";
-            } else {
-                tagList.style.display = "none";
+            tagList.classList.toggle("hidden");
+
+            if (tagList.classList.contains("hidden")) {
                 toggleButton.textContent = "태그 보기";
+            } else {
+                toggleButton.textContent = "태그 숨기기";
             }
         }
 
@@ -127,7 +132,53 @@
             const limitTimeInput = document.getElementById("limitTime");
             const hiddenLimitTime = document.getElementById("hiddenLimitTime");
             hiddenLimitTime.value = limitTimeInput.value;
+
+            // 값 검증
+            if (!hiddenLimitTime.value || isNaN(hiddenLimitTime.value) || hiddenLimitTime.value <= 0) {
+                alert("유효한 제한 시간을 입력해주세요!");
+                return false;
+            }
+
+            return true;
         }
+
+        function setLimitTimeAndOpenChild() {
+            // 제한시간 설정 및 검증
+            const isValid = setLimitTime();
+            if (!isValid) return; // 제한시간이 유효하지 않으면 중단
+
+            const problemId = "<%= request.getAttribute("problemId") %>"; // 문제 ID 가져오기
+            const limitTime = document.getElementById("hiddenLimitTime").value; // 설정된 제한 시간
+
+            const url = `/time?problemId=${problemId}&limitTime=` + limitTime;
+            console.log("새 창 열기 URL:", url); // URL 확인용 로그
+
+            // 자식 창 열기
+            childWindow = window.open(
+                url, // 자식 창 URL
+                'childWindow',
+                'width=800,height=600'
+            );
+        }
+
+        // 자식 창 상태 변경 메시지 처리
+        window.addEventListener("message", (event) => {
+            if (event.origin !== window.location.origin) return; // 도메인 확인
+
+            switch (event.data) {
+                case 'taskComplete':
+                    window.location.href = `/problem/rank?problemId=<%=request.getAttribute("problemId")%>`;
+                    break;
+                case 'stop':
+                    window.location.href = "/problem";
+                    break;
+                case 'redirectToLogin':
+                    window.location.href = "/login";
+                    break;
+                default:
+                    console.warn("알 수 없는 메시지:", event.data);
+            }
+        });
     </script>
 </head>
 <body>
@@ -135,29 +186,43 @@
         <h1>문제 뽑기 결과</h1>
 
         <!-- 서버에서 전달된 메시지 표시 -->
-        <p><%= request.getAttribute("problemMessage") %></p>
+        <p><%=request.getAttribute("problemMessage")%></p>
 
         <!-- 문제 정보 표시 -->
         <div class="problem-details">
-            <p><strong>문제 번호:</strong> <%= request.getAttribute("problemId") %></p>
-            <p><strong>문제 제목:</strong> <%= request.getAttribute("problemInfo") != null 
-                ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("title") 
-                : "N/A" %></p>
-            <p><strong>난이도:</strong> <%= request.getAttribute("problemInfo") != null 
-				? ((Map<String, Object>) request.getAttribute("problemInfo")).get("levelName") 
-				: "N/A" %></p>
-            <p><strong>제출한 사용자 수:</strong> <%= request.getAttribute("problemInfo") != null 
-                ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("acceptableUserCount") 
-                : "N/A" %></p>
-            <button id="toggleTagsButton" class="btn btn-secondary toggle-tags-btn" onclick="toggleTags()">태그 보기</button>
-            <ul id="tagList">
-                <% 
+            <p>
+                <strong>문제 번호:</strong>
+                <%=request.getAttribute("problemId")%>
+            </p>
+            <p>
+                <strong>문제 제목:</strong>
+                <%=request.getAttribute("problemInfo") != null 
+                    ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("title") 
+                    : "N/A"%>
+            </p>
+            <p>
+                <strong>난이도:</strong>
+                <%=request.getAttribute("problemInfo") != null 
+                    ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("levelName") 
+                    : "N/A"%>
+            </p>
+            <p>
+                <strong>제출한 사용자 수:</strong>
+                <%=request.getAttribute("problemInfo") != null 
+                    ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("acceptableUserCount") 
+                    : "N/A"%>
+            </p>
+            <button id="problemToggleTagsButton"
+                class="btn btn-secondary toggle-tags-btn" onclick="toggleTags()">태그 보기</button>
+            <ul id="problemTagList" class="hidden">
+                <%
                     if (request.getAttribute("problemInfo") != null) {
-                        List<Map<String, Object>> tags = (List<Map<String, Object>>) ((Map<String, Object>) request.getAttribute("problemInfo")).get("tags");
+                        List<Map<String, Object>> tags = (List<Map<String, Object>>) ((Map<String, Object>) request
+                        .getAttribute("problemInfo")).get("tags");
                         if (tags != null) {
                             for (Map<String, Object> tag : tags) {
                 %>
-                    <li><%= tag.get("tagName") %></li>
+                <li><%=tag.get("tagName")%></li>
                 <%
                             }
                         }
@@ -170,11 +235,16 @@
         <div class="center">
             <!-- 제한시간 설정 -->
             <label for="limitTime"><strong>제한시간(분):</strong></label>
-            <input type="number" id="limitTime" name="limitTime" min="1" value="30" required style="width: 60px; text-align: center; margin-left: 5px;">
+            <input
+                type="number" id="limitTime" name="limitTime" min="1" value="30"
+                required style="width: 60px; text-align: center; margin-left: 5px;">
             <form action="/time" method="get" style="display: inline;">
-                <input type="hidden" name="problemId" value="<%= request.getAttribute("problemId") %>">
-                <input type="hidden" id="hiddenLimitTime" name="limitTime">
-                <button type="submit" class="btn btn-primary" onclick="setLimitTime()">문제 풀기</button>
+                <input type="hidden" name="problemId"
+                    value="<%=request.getAttribute("problemId")%>">
+                <input
+                    type="hidden" id="hiddenLimitTime" name="limitTime">
+                <button type="button" class="btn btn-primary"
+                    onclick="setLimitTimeAndOpenChild()">문제 풀기</button>
             </form>
             <form action="/problem" method="get" style="display: inline;">
                 <button type="submit" class="btn btn-warning">다시 뽑기</button>
