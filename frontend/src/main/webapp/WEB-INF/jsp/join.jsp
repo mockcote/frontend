@@ -185,6 +185,7 @@ button {
 
                         // 코드 제출 완료 버튼 추가
                         const submitCodeButton = document.createElement("button");
+                        submitCodeButton.type = "button"; // 버튼 타입을 명시적으로 설정
                         submitCodeButton.id = "submitCodeButton";
                         submitCodeButton.textContent = "코드 제출 완료";
 
