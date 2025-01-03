@@ -112,7 +112,9 @@
             const tagList = document.getElementById("tagList");
             const toggleButton = document.getElementById("toggleTagsButton");
 
-            if (tagList.style.display === "none") {
+            // 컴퓨티드 스타일을 사용하여 실제 display 값을 가져옴
+            const style = window.getComputedStyle(tagList);
+            if (style.display === "none") {
                 tagList.style.display = "block";
                 toggleButton.textContent = "태그 숨기기";
             } else {
@@ -142,8 +144,8 @@
                 ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("title") 
                 : "N/A" %></p>
             <p><strong>난이도:</strong> <%= request.getAttribute("problemInfo") != null 
-    			? ((Map<String, Object>) request.getAttribute("problemInfo")).get("levelName") 
-    			: "N/A" %></p>
+				? ((Map<String, Object>) request.getAttribute("problemInfo")).get("levelName") 
+				: "N/A" %></p>
             <p><strong>제출한 사용자 수:</strong> <%= request.getAttribute("problemInfo") != null 
                 ? ((Map<String, Object>) request.getAttribute("problemInfo")).get("acceptableUserCount") 
                 : "N/A" %></p>
