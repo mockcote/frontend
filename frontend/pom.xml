@@ -11,7 +11,7 @@
 	<groupId>com.mockcote</groupId>
 	<artifactId>frontend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>frontend</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -101,7 +101,6 @@
 						<path>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>1.18.36</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
@@ -114,7 +113,6 @@
 						<exclude>
 							<groupId>org.projectlombok</groupId>
 							<artifactId>lombok</artifactId>
-							<version>1.18.36</version>
 						</exclude>
 					</excludes>
 				</configuration>
