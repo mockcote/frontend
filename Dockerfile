@@ -24,8 +24,8 @@ COPY --from=build /app/frontend/target/*.jar app.jar
 # JSP 파일 및 기타 웹 리소스 복사
 COPY frontend/src/main/webapp /app/src/main/webapp
 
-# 포트 설정
-EXPOSE 3000
+# 리소스 디렉토리 복사
+COPY frontend/src/main/resources /app/src/main/resources
 
 # 애플리케이션 실행 명령어
 ENTRYPOINT ["java", "-jar", "app.jar"]
