@@ -34,7 +34,7 @@ async function authFetch(url, options = {}) {
   // 토큰 만료 시 재발급 시도
   if (response.status === 401) {
     console.log("Access token expired. Refreshing token...");
-    const refreshResponse = await fetch("http://localhost:8080/auth/refresh", {
+    const refreshResponse = await fetch("https://scg.mockcote.site/auth/refresh", {
       credentials: 'include', // 쿠키 포함 (리프레시 토큰)
     });
 
