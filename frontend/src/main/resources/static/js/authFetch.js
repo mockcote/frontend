@@ -29,6 +29,7 @@ async function authFetch(url, options = {}) {
   let response = await fetch(url, {
     ...options,
     headers,
+    credentials: 'include'
   });
   
   // 토큰 만료 시 재발급 시도
@@ -48,6 +49,7 @@ async function authFetch(url, options = {}) {
       response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include'
       });
     } else {
       console.error("Failed to refresh token. Redirecting to login page...");

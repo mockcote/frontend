@@ -100,31 +100,11 @@ button:hover {
 	text-align: center;
 }
 </style>
-<script src="/js/authFetch.js"></script>
 <script>
-    const BASE_URL = "${gatewayUrl}"; // API 요청 기본 URL
 	const handle = "${cookie.handle.value}";
 
     let startTime; // 시작 시간 : 페이지 onload될 때 셋 되게 했
     let timerInterval; // 타이머 ID
-
-	// 풀이 시작
-	function timeStart() {
-		return authFetch(BASE_URL + "/submissions/start", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ handle: handle, problemId: ${problemId} })
-		})
-			.then(res => res.text())
-			.then(data => {
-				startTime = new Date(data); // 서버에서 반환된 데이터를 Date 객체로 변환
-				console.log("startTime 설정:", startTime);
-			})
-			.catch(err => {
-				console.error("풀이 시작 중 오류 발생: ", err);
-				throw err; // 오류를 호출한 쪽으로 전달
-			});
-	}
 
     // 타이머 업데이트 함수 
     function updateTimer() {
@@ -146,7 +126,6 @@ button:hover {
             return;
         }
 
-        
         // 남은 시간 출력해주는 부분
         const minutes = Math.floor(remainingSeconds / 60);
         const seconds = remainingSeconds % 60;
@@ -155,29 +134,35 @@ button:hover {
 
     // 풀이 여부 체크 
     function checkSubmission() {
-        const url = BASE_URL + "/submissions/result?handle=" + handle + "&problemId=" + ${problemId};
+		// 서버에 handle과 problemId 전달
+		fetch("/time/checkSubmission", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				handle: handle,
+				problemId: ${problemId}
+			})
+		})
+		.then(response => response.text())
+		.then(data => {
+			console.log("서버 응답:", data);
+			const status = data.trim();
 
-        authFetch(url)
-            .then(response => response.text())
-            .then(data => {
-                console.log("응답 데이터:", data);
-                const status = data.trim();
-                document.getElementById("status").innerText = status === "SUCCESS" ? "SUCCESS" : "FAIL";
+			// 상태 업데이트
+			document.getElementById("status").innerText = status === "SUCCESS" ? "SUCCESS" : "FAIL";
 
-                if (status === "SUCCESS") {
-                    saveSubmission(status);
-                    incrementScore(); // 점수 증가 호출
-                } else {
-                    alert("풀이 실패! 코드를 다시 작성해 보세요.");
-                }
-            })
-            .catch(err => console.error("API 호출 중 오류 발생:", err));
+			if (status === "SUCCESS") {
+				saveSubmission(status); // 성공 상태 저장
+			} else {
+				alert("풀이 실패! 다시 시도해 보세요.");
+			}
+		})
+		.catch(err => console.error("API 호출 중 오류 발생:", err));
     }
 
     // 풀이 로그 저장 함수 
     function saveSubmission(status) {
         const language = document.getElementById("language").value;
-        const url = BASE_URL + "/submissions/save";
 
         // 시간 형식 맞추기 (시작 시간을 시간:분 으로 해서 일어나는 거 같은데 아예 시작 시간 형태를 수정해도 좋을 듯 )
         const formattedStartTime = startTime.getFullYear() +
@@ -187,80 +172,62 @@ button:hover {
             ":" + startTime.getMinutes().toString().padStart(2, "0") +
             ":" + startTime.getSeconds().toString().padStart(2, "0");
 
-        // 언어 설정이 없는 거 같은데 우리 요청에 있길래 일단 select로 받두게 해서 추가함
-        const requestBody = {
-            handle: handle,
-            problemId: ${problemId},
-            startTime: formattedStartTime,
-            limitTime: ${limitTime},
-            language: language,
-            status: status
-        };
+			// 서버로 데이터를 전송
+		fetch("/time/saveSubmission", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				handle: handle,
+				problemId: ${problemId},
+				startTime: formattedStartTime,
+				limitTime: ${limitTime},
+				language: language,
+				status: status
+			})
+		})
+		.then(response => {
+			if (response.ok) {
+				alert("풀이 결과가 저장되었습니다.");
+				// 부모 창에 작업 완료 메시지 보내기
+				if (window.opener) {
+					window.opener.postMessage('taskComplete', window.location.origin);
+				}
 
-        console.log("요청 데이터:", requestBody);
-
-        authFetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody)
-        })
-            .then(response => {
-                if (response.status === 201) {
-                    alert("풀이 결과가 저장되었습니다.");
-                    /* window.location.href = "/problem/rank?problemId=" + ${problemId}; */
-                    
-                 // 부모 창에 작업 완료 메시지 보내기
-                    if (window.opener) {
-                        window.opener.postMessage('taskComplete', window.location.origin);
-                    }
-
-                    // 자식 창 닫기
-                    window.close();
-                    
-                } else {
-                    console.error("응답 상태 코드:", response.status);
-                    alert("결과 저장에 실패했습니다. 상태 코드: " + response.status);
-                }
-            })
-            .catch(err => console.error("API 호출 중 오류 발생:", err));
-    }
-
-	// 사용자 점수 +1
-    function incrementScore() {
-        const incrementScoreUrl = BASE_URL + "/stats/rank/increment-score?handle=" + handle;
-
-        authFetch(incrementScoreUrl, {method: "POST"})
-            .then(response => {
-                if (response.ok) {
-                    alert("점수가 성공적으로 업데이트되었습니다!");
-                } else {
-                    alert("점수 업데이트에 실패했습니다. 상태 코드: " + response.status);
-                }
-            })
-            .catch(err => console.error("점수 증가 중 오류 발생:", err));
+				// 자식 창 닫기
+				window.close();
+			} else {
+				console.error("응답 상태 코드:", response.status);
+				alert("결과 저장에 실패했습니다. 상태 코드: " + response.status);
+			}
+		})
+		.catch(err => console.error("API 호출 중 오류 발생:", err));
     }
 
 	// 그만하기
 	function back() {
-		authFetch(BASE_URL+"/submissions/end", {
+		fetch("/time/endSubmission", {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({handle: handle, problemId: ${problemId}})
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({
+				handle: handle,
+				problemId: ${problemId}
+			})
 		})
-				.then(response => {
-					if(response.status === 204) {
-						
-		                // 부모 창에 작업 완료 메시지 보내기
-                    if (window.opener) {
-                        window.opener.postMessage('stop', window.location.origin);
-                    }
+		.then(response => {
+			if (response.status === 204) {
+				// 부모 창에 작업 완료 메시지 보내기
+				if (window.opener) {
+					window.opener.postMessage('stop', window.location.origin);
+				}
 
-                    // 자식 창 닫기
-                    window.close();
-						
-					}
-				})
-				.catch(err => console.error("뒤로가기 중 오류 발생: ", err));
+				// 자식 창 닫기
+				window.close();
+			} else {
+				console.error("응답 상태 코드:", response.status);
+				alert("그만하기 요청 처리에 실패했습니다. 상태 코드: " + response.status);
+			}
+		})
+		.catch(err => console.error("그만하기 요청 중 오류 발생:", err));
 	}
 	
 	// 자식 창
@@ -284,15 +251,9 @@ button:hover {
 	  }
 	});
 
-
-	
-
-	window.onload = async function () {
+	window.onload = function () {
 		try {
-			// timeStart가 완료될 때까지 기다림
-			await timeStart();
-
-			console.log("timeStart 완료");
+			startTime = new Date("${startTime}");
 			console.log("시작 시간:", startTime);
 
 			// 시작 시간 포맷팅

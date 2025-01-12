@@ -1,4 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <jsp:include page="header.jsp" />
 <!DOCTYPE html>
 <html lang="ko">
@@ -7,7 +9,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마이페이지</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="/js/authFetch.js"></script>
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -102,124 +103,11 @@
     </style>
     <script>
         const handle = "${cookie.handle.value}";
-        let currentPage = 0; // 현재 페이지
-        let totalPages = 1; // 전체 페이지 수
-
-        // 유저 통계 가져오기
-        async function fetchUserStats() {
-            try {
-                const userStats = await authFetch(BASE_URL+"/stats/user?handle="+handle).then((res) => res.json());
-                const tableBody = document.getElementById('user-stats-body');
-                tableBody.innerHTML = ''; // 기존 내용 초기화
-
-                const row = document.createElement('tr');
-                row.innerHTML = '<td data-label="시도한 문제 횟수">' + userStats.totalProblems + '</td><td data-label="성공한 문제 횟수">'
-                                + userStats.solvedProblems + '</td><td data-label="실패한 문제 횟수">'
-                                + userStats.failedProblems + '</td><td data-label="성공률">'
-                                + userStats.successRate + '%</td><td data-label="걸린 시간 평균">'
-                                + userStats.averageDuration + '초</td>';
-                tableBody.appendChild(row);
-            } catch (error) {
-                console.error('유저 통계 가져오기 실패:', error);
-            }
-        }
-
-        // 유저 히스토리 가져오기
-        async function fetchUserHistory() {
-            try {
-                const response = await authFetch(BASE_URL + "/stats/history?handle=" + handle + "&page=" + currentPage);
-                const data = await response.json();
-                const userHistory = data.content;
-                totalPages = data.totalPages; // 전체 페이지 수 업데이트
-
-                const historyBody = document.getElementById('user-history-body');
-                historyBody.innerHTML = ''; // 기존 내용 초기화
-
-                userHistory.forEach(history => {
-                    const row = document.createElement('tr');
-                    const startTime = new Date(history.startTime);
-                    const formattedStartTime = startTime.getFullYear().toString() + "-"
-                        + (startTime.getMonth() + 1).toString().padStart(2, "0") + "-"
-                        + startTime.getDate().toString().padStart(2, "0") + " "
-                        + startTime.getHours().toString().padStart(2, "0") + ":"
-                        + startTime.getMinutes().toString().padStart(2, "0");
-
-                    row.innerHTML =
-                        '<td data-label="문제 번호"><a href="/problem/rank?problemId='+history.problemId+'">'+ history.problemId
-                        + '</a></td><td data-label="풀이 상태">' + history.status
-                        + '</td><td data-label="소요 시간">' + history.duration
-                        + '초</td><td data-label="사용 언어">' + history.language
-                        + '</td><td data-label="시작 시간">' + formattedStartTime
-                        + '</td>';
-                    historyBody.appendChild(row);
-                });
-
-                createPaginationButtons(); // 페이지네이션 버튼 생성
-            } catch (error) {
-                console.error('유저 히스토리 가져오기 실패:', error);
-            }
-        }
-
-        // 페이지네이션 버튼
-        function createPaginationButtons() {
-            const paginationDiv = document.getElementById('pagination');
-
-            // 이전/다음 버튼 참조
-            const prevButton = document.getElementById('prev-page');
-            const nextButton = document.getElementById('next-page');
-
-            // 이전 버튼 활성화/비활성화
-            prevButton.disabled = currentPage === 0;
-            prevButton.onclick = function () {
-                if (currentPage > 0) {
-                    currentPage--;
-                    fetchUserHistory();
-                }
-            };
-
-            // 다음 버튼 활성화/비활성화
-            nextButton.disabled = currentPage === totalPages - 1;
-            nextButton.onclick = function () {
-                if (currentPage < totalPages - 1) {
-                    currentPage++;
-                    fetchUserHistory();
-                }
-            };
-
-            // 페이지 번호 버튼 생성 (기존 로직 유지)
-            const pageButtons = document.createElement('span');
-            pageButtons.style.margin = '0 10px';
-            paginationDiv.innerHTML = ''; // 기존 버튼 초기화
-            paginationDiv.appendChild(prevButton);
-
-            for (let i = 0; i < totalPages; i++) {
-                const button = document.createElement('button');
-                button.textContent = i + 1;
-                button.style.margin = '0 5px';
-                button.disabled = i === currentPage;
-
-                button.onclick = function () {
-                    currentPage = i;
-                    fetchUserHistory();
-                };
-
-                pageButtons.appendChild(button);
-            }
-
-            paginationDiv.appendChild(pageButtons);
-            paginationDiv.appendChild(nextButton);
-        }
 
         // 상세 통계 페이지 이동
         function goToDetailedStats() {
             window.location.href = "/stat?handle=" + handle;
         }
-
-        // 페이지 로드 시 데이터 가져오기
-        window.onload = function () {
-            fetchUserStats();
-            fetchUserHistory();
-        };
     </script>
 </head>
 <body>
@@ -236,8 +124,14 @@
                 <th>걸린 시간 평균</th>
             </tr>
         </thead>
-        <tbody id="user-stats-body">
-            <!-- 사용자 통계 데이터가 여기에 추가됨 -->
+        <tbody>
+            <tr>
+                <td>${userStats.totalProblems}</td>
+                <td>${userStats.solvedProblems}</td>
+                <td>${userStats.failedProblems}</td>
+                <td>${userStats.successRate}%</td>
+                <td>${userStats.averageDuration}초</td>
+            </tr>
         </tbody>
     </table>
 
@@ -257,13 +151,53 @@
             </tr>
         </thead>
         <tbody id="user-history-body">
-            <!-- 유저 히스토리 데이터가 여기에 추가됨 -->
+            <c:forEach var="history" items="${userHistory.content}">
+                <tr>
+                    <td><a href="/problem/rank?problemId=${history.problemId}">${history.problemId}</a></td>
+                    <td>${history.status}</td>
+                    <td>${history.duration}초</td>
+                    <td>${history.language}</td>
+                    <td>
+                        <fmt:formatDate value="${history.startTime}" pattern="yyyy-MM-dd HH:mm" />
+                    </td>
+                </tr>
+            </c:forEach>
         </tbody>
     </table>
-    <div id="pagination" style="text-align: center; margin-top: 20px;">
-        <button id="prev-page" class="btn btn-secondary" disabled>이전</button>
-        <!-- 페이지 번호 버튼이 동적으로 추가됩니다 -->
-        <button id="next-page" class="btn btn-secondary" disabled>다음</button>
-    </div>
+    <c:if test="${totalPages > 0}">
+        <div id="pagination" style="text-align: center; margin-top: 20px;">
+            <!-- 이전 버튼 -->
+            <c:choose>
+                <c:when test="${currentPage > 0}">
+                    <a href="/mypage?page=${currentPage - 1}" class="btn btn-secondary">이전</a>
+                </c:when>
+                <c:otherwise>
+                    <button class="btn btn-secondary" disabled>이전</button>
+                </c:otherwise>
+            </c:choose>
+
+            <!-- 페이지 번호 버튼 -->
+            <c:forEach var="i" begin="0" end="${totalPages - 1}">
+                <c:choose>
+                    <c:when test="${i == currentPage}">
+                        <button class="btn btn-primary" disabled>${i + 1}</button>
+                    </c:when>
+                    <c:otherwise>
+                        <a href="/mypage?page=${i}" class="btn btn-secondary">${i + 1}</a>
+                    </c:otherwise>
+                </c:choose>
+            </c:forEach>
+
+            <!-- 다음 버튼 -->
+            <c:choose>
+                <c:when test="${currentPage < totalPages - 1}">
+                    <a href="/mypage?page=${currentPage + 1}" class="btn btn-secondary">다음</a>
+                </c:when>
+                <c:otherwise>
+                    <button class="btn btn-secondary" disabled>다음</button>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </c:if>
 </body>
 </html>
