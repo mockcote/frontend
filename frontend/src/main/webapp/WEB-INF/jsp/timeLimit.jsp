@@ -100,6 +100,7 @@ button:hover {
 	text-align: center;
 }
 </style>
+<script src="/js/authFetch.js"></script>
 <script>
 	const handle = "${cookie.handle.value}";
 
@@ -135,7 +136,7 @@ button:hover {
     // 풀이 여부 체크 
     function checkSubmission() {
 		// 서버에 handle과 problemId 전달
-		fetch("/time/checkSubmission", {
+		authFetch("/time/checkSubmission", {
 			method: "POST",
 			headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			body: new URLSearchParams({
@@ -173,7 +174,7 @@ button:hover {
             ":" + startTime.getSeconds().toString().padStart(2, "0");
 
 			// 서버로 데이터를 전송
-		fetch("/time/saveSubmission", {
+		authFetch("/time/saveSubmission", {
 			method: "POST",
 			headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			body: new URLSearchParams({
@@ -205,7 +206,7 @@ button:hover {
 
 	// 그만하기
 	function back() {
-		fetch("/time/endSubmission", {
+		authFetch("/time/endSubmission", {
 			method: "POST",
 			headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			body: new URLSearchParams({

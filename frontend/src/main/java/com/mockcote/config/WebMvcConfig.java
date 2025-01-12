@@ -35,7 +35,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
-                .addPathPatterns("/**") // 모든 URL에 대해 인터셉터 적용
-                .excludePathPatterns("/", "/join", "/login", "/error"); // 특정 URL은 제외
+                .addPathPatterns("/time/**"); // time URL에 대해 인터셉터 적용
     }
 }
