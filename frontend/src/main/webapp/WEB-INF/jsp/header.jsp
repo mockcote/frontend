@@ -1,10 +1,9 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-
 <div id="navbar" style="background-color: #007bff; padding: 10px; text-align: center; color: white;">
     <a href="/" style="margin-right: 15px; color: white; text-decoration: none;">홈</a>
     <a href="/rank/total" style="margin-right: 15px; color: white; text-decoration: none;">전체 사용자 랭킹</a>
-
+    
     <!-- 전체 문제 목록 및 문제 풀기 버튼을 사용자 전용 버튼에 추가 -->
     <span id="userButtons" style="display: none;">
         <a href="/mypage" style="margin-right: 15px; color: white; text-decoration: none;">마이페이지</a>
@@ -12,30 +11,24 @@
         <a href="/problem" style="margin-right: 15px; color: white; text-decoration: none;">문제 풀기</a>
         <a href="#" id="logoutButton" style="color: white; text-decoration: none;">로그아웃</a>
     </span>
-
+    
     <span id="guestButtons">
         <a href="/join" style="margin-right: 15px; color: white; text-decoration: none;">회원가입</a>
         <a href="/login" style="margin-right: 15px; color: white; text-decoration: none;">로그인</a>
     </span>
 </div>
 <hr>
-
 <script>
     const BASE_URL = "${gatewayUrl}";
 
     document.addEventListener("DOMContentLoaded", () => {
+        const accessToken = localStorage.getItem('accessToken');
         const guestButtons = document.getElementById('guestButtons');
         const userButtons = document.getElementById('userButtons');
         const logoutButton = document.getElementById('logoutButton');
 
-        // 쿠키에서 refreshToken이 있는지 확인하여 로그인 상태 판단
-        const isUserLoggedIn = () => {
-            const cookies = document.cookie.split('; ');
-            return cookies.some(cookie => cookie.startsWith('refreshToken='));
-        };
-
         // 로그인 상태에 따라 버튼 표시
-        if (isUserLoggedIn()) {
+        if (accessToken) {
             guestButtons.style.display = 'none';
             userButtons.style.display = 'inline';
         } else {
@@ -50,7 +43,8 @@
                 const response = await fetch(BASE_URL + '/auth/logout', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${accessToken}`
                     },
                     credentials: 'include' // 쿠키 포함
                 });
@@ -60,8 +54,8 @@
                 console.log('응답 상태 텍스트:', response.statusText);
 
                 if (response.ok) {
-                    // 로컬스토리지에서 accessToken 제거
-                    localStorage.removeItem('accessToken');
+                    // 로컬 스토리지 및 세션 스토리지 정보 제거
+                    localStorage.removeItem('accessToken'); // 로컬스토리지에서 토큰 제거
                     alert('로그아웃되었습니다.');
                     location.reload(); // 페이지 새로고침
                 } else {
